@@ -7,11 +7,13 @@ var
   rename = require('gulp-rename'),
 //sass = require('gulp-sass'), // for building css from scss
 //minifycss = require('gulp-minify-css'), // for minifiing css
-  jslint = require('gulp-jslint');
-  testem = require('gulp-testem');
+  jslint = require('gulp-jslint'),
+  testem = require('gulp-testem'),
+  es6transpiler = require('gulp-es6-module-transpiler');
 
 // paths
 var
+  es6 = './src/es6/',
   src = './src/js/',
 //scss = './scss/',
 //scssFiles = [],
@@ -37,6 +39,9 @@ var
     src + 'misc/smoothers.js',
     src + 'misc/utility.js',
     src + 'misc/error.js'
+  ],
+  es6Files = [
+    es6 + 'common/data_graphic.js'
   ];
 
 gulp.task('clean', function () {
@@ -59,6 +64,15 @@ gulp.task('build:js', ['clean'], function () {
     .pipe(gulp.dest(dist))
     .pipe(rename('metricsgraphics.min.js'))
     .pipe(uglify())
+    .pipe(gulp.dest(dist));
+});
+
+gulp.task('build:es6', ['clean'], function() {
+  return gulp.src(es6Files)
+    .pipe(es6transpiler({
+      type: "amd"
+    }))
+    .pipe(concat('metricsgraphics.es6.js'))
     .pipe(gulp.dest(dist));
 });
 
