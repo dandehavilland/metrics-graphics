@@ -1,41 +1,37 @@
 function x_rug(args) {
     'use strict';
-    var buffer_size = args.chart_type === 'point'
+    var buffer_size,
+        svg = mg_get_svg_child_of(args.target),
+        all_data = [].concat.apply([], args.data),
+        rug = svg.selectAll('line.mg-x-rug').data(all_data);
+
+    buffer_size = args.chart_type === 'point'
         ? args.buffer / 2
         : args.buffer;
 
-    var svg = mg_get_svg_child_of(args.target);
-    var all_data=[];
-    for (var i=0; i<args.data.length; i++) {
-        for (var j=0; j<args.data[i].length; j++) {
-            all_data.push(args.data[i][j]);
-        }
-    }
-
-    var rug = svg.selectAll('line.mg-x-rug').data(all_data);
-
     //set the attributes that do not change after initialization, per
     //D3's general update pattern
-    rug.enter().append('svg:line')
-        .attr('class', 'mg-x-rug')
-        .attr('opacity', 0.3);
+    rug.enter()
+        .append('svg:line')
+            .attr({
+                'class': 'mg-x-rug',
+                opacity: 0.3
+            });
 
     //remove rug elements that are no longer in use
     rug.exit().remove();
 
-    //set coordinates of new rug elements
-    rug.exit().remove();
-
-    rug.attr('x1', args.scalefns.xf)
-        .attr('x2', args.scalefns.xf)
-        .attr('y1', args.height-args.top+buffer_size)
-        .attr('y2', args.height-args.top);
+    rug.attr({
+        x1: args.scalefns.xf,
+        x2: args.scalefns.xf,
+        y1: args.height - args.top + buffer_size,
+        y2: args.height - args.top
+    });
 
     if (args.color_accessor) {
         rug.attr('stroke', args.scalefns.color);
         rug.classed('mg-x-rug-mono', false);
-    }
-    else {
+    } else {
         rug.attr('stroke', null);
         rug.classed('mg-x-rug-mono', true);
     }
@@ -43,13 +39,13 @@ function x_rug(args) {
 
 function x_axis(args) {
     'use strict';
-    var svg = mg_get_svg_child_of(args.target);
-    var $svg = $($(args.target).find('svg').get(0));
-    args.processed = {};
+    var svg = mg_get_svg_child_of(args.target),
+        axis,
+        min_x,
+        max_x,
+        last_i;
 
-    var g;
-    var min_x;
-    var max_x;
+    args.processed = {};
 
     args.scalefns.xf = function(di) {
         return args.scales.X(di[args.x_accessor]);
@@ -65,31 +61,32 @@ function x_axis(args) {
     args.scales.X = (args.time_series)
         ? d3.time.scale()
         : d3.scale.linear();
+
     args.scales.X
         .domain([args.processed.min_x, args.processed.max_x])
         .range([args.left + args.buffer, args.width - args.right - args.buffer - args.additional_buffer]);
 
     //remove the old x-axis, add new one
-    $svg.find('.mg-x-axis').remove();
+    svg.selectAll('.mg-x-axis').remove();
 
     if (!args.x_axis) {
         return this;
     }
 
     //x axis
-    g = svg.append('g')
+    axis = svg.append('g')
         .classed('mg-x-axis', true)
         .classed('mg-x-axis-small', args.use_small_class);
 
-    var last_i = args.scales.X.ticks(args.xax_count).length - 1;
+    last_i = args.scales.X.ticks(args.xax_count).length - 1;
 
     //are we adding a label?
     if (args.x_label) {
-        mg_add_x_label(g, args);
+        mg_add_x_label(axis, args);
     }
 
-    mg_add_x_ticks(g, args);
-    mg_add_x_tick_labels(g, args);
+    mg_add_x_ticks(axis, args);
+    mg_add_x_tick_labels(axis, args);
 
     if (args.x_rug) {
         x_rug(args);
@@ -99,8 +96,10 @@ function x_axis(args) {
 }
 
 function x_axis_categorical(args) {
-    var svg_width = args.width,
-        additional_buffer = 0;
+    var svg = mg_get_svg_child_of(args.target),
+        svg_width = args.width,
+        additional_buffer = 0,
+        axis;
 
     if (args.chart_type === 'bar') {
         additional_buffer = args.buffer + 5;
@@ -114,13 +113,10 @@ function x_axis_categorical(args) {
         return args.scales.X(di[args.x_accessor]);
     };
 
-    var svg = mg_get_svg_child_of(args.target);
-    var $svg = $($(args.target).find('svg').get(0));
-
     //remove the old x-axis, add new one
-    $svg.find('.mg-x-axis').remove();
+    svg.select('.mg-x-axis').remove();
 
-    var g = svg.append('g')
+    axis = svg.append('g')
         .classed('mg-x-axis', true)
         .classed('mg-x-axis-small', args.use_small_class);
 
@@ -128,22 +124,27 @@ function x_axis_categorical(args) {
         return this;
     }
 
-    var labels = g.selectAll('text').data(args.categorical_variables).enter().append('svg:text');
+    var labels = axis.selectAll('text')
+        .data(args.categorical_variables).enter()
+            .append('svg:text');
 
-    labels.attr('x', function(d) {
-            return args.scales.X(d) + args.scales.X.rangeBand() / 2
-                + (args.buffer) * args.outer_padding_percentage + (additional_buffer / 2);
+    labels
+        .attr({
+            x: function(d) {
+                var x_position = args.scales.X(d) + args.scales.X.rangeBand() / 2
+                    + args.buffer * args.outer_padding_percentage + (additional_buffer / 2);
+                return x_position;
+            },
+            y: args.height - args.bottom + args.buffer,
+            dy: '.35em',
+            'text-anchor': 'middle'
         })
-        .attr('y', args.height - args.bottom + args.buffer)
-        .attr('dy', '.35em')
-        .attr('text-anchor', 'middle')
-        .text(String);
-
-    labels.each(function(d, idx) {
-        var elem = this,
-            width = args.scales.X.rangeBand();
-        truncate_text(elem, d, width);
-    });
+        .text(String)
+        .each(function(d, idx) {
+            var elem = this,
+                width = args.scales.X.rangeBand();
+            truncate_text(elem, d, width);
+        });
 
     return this;
 }
