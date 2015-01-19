@@ -224,3 +224,9 @@ function wrapText(text, width, token, tspanAttrs) {
     }
   });
 }
+
+function generateMouseEvent(type) {
+  var event = document.createEvent('MouseEvent');
+  event.initEvent(type, true, true);
+  return event;
+}

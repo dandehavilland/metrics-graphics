@@ -361,3 +361,7 @@ circle.mg-points-mono {
 .mg-year-marker-small text {
     font-size: 0.6rem;
 }
+
+.mg-brush rect.extent {
+    opacity: 0.3;
+}

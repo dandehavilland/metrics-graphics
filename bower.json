@@ -6,8 +6,10 @@
     "dist/metricsgraphics.css"
   ],
   "dependencies": {
-    "jquery": ">=1.11.1",
-    "d3": ">=3.4.8"
+    "jquery": "~1.11.1",
+    "d3": "~3.5.3",
+    "bootstrap": "~3.3.1",
+    "font-awesome": "~4.2.0"
   },
   "ignore": [
     ".DS_Store",

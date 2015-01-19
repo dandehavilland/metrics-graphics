@@ -12,13 +12,11 @@ charts.line = function(args) {
     };
 
     this.mainPlot = function() {
-        var svg = mg_get_svg_child_of(args.target);
-        var g;
-        var data_median = 0;
-        var updateTransitionDuration = (args.transition_on_update) ? 1000 : 0;
-        var mapToY = function(d) {
-            return d[args.y_accessor];
-        };
+        var svg = mg_get_svg_child_of(args.target),
+			data_median = 0,
+			confidence_area,
+            updateTransitionDuration = (args.transition_on_update) ? 1000 : 0,
+            mapToY = function(d) { return d[args.y_accessor]; };
 
         //main area
         var area = d3.svg.area()
@@ -27,13 +25,10 @@ charts.line = function(args) {
             .y1(args.scalefns.yf)
             .interpolate(args.interpolate);
 
-        //confidence band
-        var confidence_area;
-
         //if it already exists, remove it
-        var $existing_band = $(args.target).find('.mg-confidence-band');
-        if ($existing_band.length > 0) {
-            $existing_band.remove();
+        var existing_band = svg.select('.mg-confidence-band');
+        if (!existing_band.empty()) {
+            existing_band.remove();
         }
 
         if (args.show_confidence_band) {
@@ -55,6 +50,9 @@ charts.line = function(args) {
             .x(args.scalefns.xf)
             .y(args.scalefns.yf)
             .interpolate(args.interpolate);
+
+		// we need the line later for brushing
+		// this.line = line;
 
         //for animating line on first load
         var flat_line = d3.svg.line()
@@ -260,7 +258,9 @@ charts.line = function(args) {
                         })
                         .on('mouseover', this.rolloverOn(args))
                         .on('mouseout', this.rolloverOff(args))
-                        .on('mousemove', this.rolloverMove(args));
+                        .on('mousemove', this.rolloverMove(args))
+                        .on('mousedown', this.mouseDown(args))
+                        .on('mouseup', this.mouseUp(args));
         }
 
         // for multi-lines and aggregated rollovers, use rects
@@ -306,7 +306,9 @@ charts.line = function(args) {
                         .attr('opacity', 0)
                         .on('mouseover', this.rolloverOn(args))
                         .on('mouseout', this.rolloverOff(args))
-                        .on('mousemove', this.rolloverMove(args));
+                        .on('mousemove', this.rolloverMove(args))
+                        .on('mousedown', this.mouseDown(args))
+                        .on('mouseup', this.mouseUp(args));
         }
 
         //for single line, use rects
@@ -375,7 +377,9 @@ charts.line = function(args) {
                         .attr('opacity', 0)
                         .on('mouseover', this.rolloverOn(args))
                         .on('mouseout', this.rolloverOff(args))
-                        .on('mousemove', this.rolloverMove(args));
+                        .on('mousemove', this.rolloverMove(args))
+                        .on('mousedown', this.mouseDown(args))
+                        .on('mouseup', this.mouseUp(args));
         }
 
         //if the dataset is of length 1, trigger the rollover for our solitary rollover rect
@@ -469,7 +473,7 @@ charts.line = function(args) {
                     //trigger mouseover on matching line in .linked charts
                     d3.selectAll('.mg-line' + d.line_id + '-color.roll_' + id)
                         .each(function(d, i) {
-                            d3.select(this).on('mouseover')(d,i);
+                            d3.select(this).on('g')(d,i);
                         });
                 }
             }
@@ -625,10 +629,80 @@ charts.line = function(args) {
         };
     };
 
+    this.mouseDown = function(args) {
+        var chartContext = this;
+
+        return function(d, i) {
+            if (args.brushing) {
+
+                var passThruMouseDown = generateMouseEvent('mousedown');
+
+                chartContext.brushGroup
+                    .style('pointer-events', 'all')
+                    .node().dispatchEvent(passThruMouseDown);
+            }
+
+            console.log('mouseDown', arguments);
+        };
+    };
+
+    this.mouseUp = function(args) {
+        var chartContext = this;
+
+        return function(d, i) {
+            console.log('mouseUp', arguments);
+        };
+    };
+
     this.windowListeners = function() {
         mg_window_listeners(this.args);
         return this;
     };
+
+	this.brushing = function() {
+        var args = this.args;
+
+        if (args.brushing === false) {
+            return this;
+        }
+
+		var brush,
+            svg = d3.select(args.target).select('svg'),
+            rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
+            group;
+
+		brush = d3.svg.brush()
+		    .x(args.scales.X)
+            .on('brushstart', function() {
+                rollover.style('pointer-events', 'none');
+            })
+            .on('brushend', this.brushend(rollover));
+
+        group = svg.append('g')
+            .on('mousedown', function() {
+                console.log('brush mousedown');
+            });
+
+        group.call(brush)
+            .style('pointer-events', 'none')
+            .classed('mg-brush', true)
+            .selectAll('rect')
+                .attr('height', args.height - args.bottom);
+
+        brush
+
+        this.brush = brush;
+        this.brushGroup = group;
+
+        return this;
+	};
+
+	this.brushend = function(rollover) {
+        return function() {
+          rollover.style('pointer-events', 'all');
+          d3.select(this).style('pointer-events', 'none');
+        };
+	};
 
     this.init(args);
 
