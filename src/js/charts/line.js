@@ -658,16 +658,35 @@ charts.line = function(args) {
             mouseDown = false,
             svg = d3.select(args.target).select('svg'),
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
-            brushingGroup = rollover.insert('g', '*')
-                .classed('mg-brush', true),
-            extentRect = brushingGroup.append('rect')
-                .attr({
-                    opacity: 0,
-                    y: args.top,
-                    height: args.height - args.bottom - args.top - args.buffer
-                })
-                .classed('mg-extent', true);
+            brushingGroup,
+            extentRect,
+            resetRect,
+            zoomLevel = 0,
+            maxZooomLevel = 10;
 
+        brushingGroup = rollover.insert('g', '*')
+            .classed('mg-brush', true);
+
+        extentRect = brushingGroup.append('rect')
+            .attr({
+                opacity: 0,
+                y: args.top,
+                height: args.height - args.bottom - args.top - args.buffer
+            })
+            .classed('mg-extent', true);
+
+        // resetRect = brushingGroup.append('rect')
+        //     .attr({
+        //         x: args.width - 15,
+        //         y: 15,
+        //         width: 15,
+        //         height: 15,
+        //         fill: 'rgba(0,0,0,0,5)'
+        //     })
+        //     .classed('mg-reset', true);
+
+
+        // mousedown, start area selection
         rollover.on('mousedown', function() {
             mouseDown = true;
             isDragging = false;
@@ -677,6 +696,7 @@ charts.line = function(args) {
             });
         });
 
+        // mousemove / drag, expand area selection
         rollover.on('mousemove', function() {
             if (mouseDown) {
                 var extentX = +extentRect.attr('x'),
@@ -694,23 +714,71 @@ charts.line = function(args) {
             }
         });
 
+        // mouseup, finish area selection
         rollover.on('mouseup', function() {
             mouseDown = false;
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
 
+                var extentX0 = +extentRect.attr('x'),
+                    extentX1 = extentX0 + (+extentRect.attr('width')),
+                    scale = args.scales.X.copy();
 
-            var extentX0 = +extentRect.attr('x'),
-                extentX1 = extentX0 + (+extentRect.attr('width'));
+                args.min_x = args.scales.X.invert(extentX0);
+                args.max_x = args.scales.X.invert(extentX1);
 
-            args.min_x = args.scales.X.invert(extentX0);
-            args.max_x = args.scales.X.invert(extentX1);
+                scale.domain([args.min_x, args.max_x]);
 
-            // TODO: set y axis min/max to match extent
+                // var bisect = d3.bisector(function(d) { return d.date; }).right;
+                // var correspondingY0 = args.data[0][bisect(args.data[0], args.min_x)];
+                // var correspondingY1 = args.data[0][bisect(args.data[0], args.max_x)];
 
-            // redraw it all
-            // is there a nicer way to do this?
-            MG.data_graphic(args);
+                console.log(scale.domain());
+
+                // var correspondingY = [];
+                // for (x = args.min_x; x < args.max_x; x++) {
+                //
+                //
+                // }
+
+                // TODO: set y axis min/max to match extent
+
+                // redraw it all
+                // is there a nicer way to do this?
+                MG.data_graphic(args);
+            } else {
+                args.min_x = args.scales.X[0];
+                args.max_x = args.scales.X[args.scales.X.length-1];
+                MG.data_graphic(args);
+            }
         });
+
+        // mousewheel zoom
+        // svg.on('mousewheel.zoom', function() {
+        //     var evt = d3.event,
+        //         zoomingIn = d3.event.wheelDeltaY > 0;
+        //
+        //     evt.preventDefault();
+        //
+        //     if (zoomingIn) {
+        //         zoomLevel = Math.min(zoomLevel+1, maxZooomLevel);
+        //     }
+        //
+        //     console.log('mousewheel.zoom');
+        //
+        //     args.min_x = args.scales.X[0];
+        //     args.max_x = args.scales.X[args.scales.X.length-1];
+        //
+        //     MG.data_graphic(args);
+        //
+        //     console.log('mousewheel.zoom');
+        // });
+
+        // resetRect.on('click', function() {
+        //     args.min_x = args.scales.X[0];
+        //     args.max_x = args.scales.X[args.scales.X.length-1];
+        //     MG.data_graphic(args);
+        // });
 
         return this;
 	};

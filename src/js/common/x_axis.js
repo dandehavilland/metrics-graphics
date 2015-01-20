@@ -64,7 +64,8 @@ function x_axis(args) {
 
     args.scales.X
         .domain([args.processed.min_x, args.processed.max_x])
-        .range([args.left + args.buffer, args.width - args.right - args.buffer - args.additional_buffer]);
+        .range([args.left + args.buffer, args.width - args.right - args.buffer - args.additional_buffer])
+        .clamp(true);
 
     //remove the old x-axis, add new one
     svg.selectAll('.mg-x-axis').remove();
@@ -437,7 +438,7 @@ function mg_add_x_tick_labels(g, args) {
 
 function mg_find_min_max_x(args) {
     var last_i,
-        extent_x = [],
+        extent_x = [0,0],
         min_x,
         max_x,
         all_data = [].concat.apply([], args.data),
@@ -448,12 +449,9 @@ function mg_find_min_max_x(args) {
 
     if (args.chart_type === 'line' || args.chart_type === 'point' || args.chart_type === 'histogram') {
         extent_x = d3.extent(all_data, mapDtoX);
-        min_x = extent_x[0];
-        max_x = extent_x[1];
 
     } else if (args.chart_type === 'bar') {
-        min_x = 0;
-        max_x = d3.max(all_data, function(d) {
+        extent_x[1] = d3.max(args.data[0], function(d) {
             var trio = [
                 d[args.x_accessor],
                 d[args.baseline_accessor],
@@ -462,6 +460,9 @@ function mg_find_min_max_x(args) {
             return Math.max.apply(null, trio);
         });
     }
+
+    min_x = extent_x[0];
+    max_x = extent_x[1];
 
     //if data set is of length 1, expand the range so that we can build the x-axis
     //of course, a line chart doesn't make sense in this case, so the preferred
