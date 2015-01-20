@@ -647,7 +647,8 @@ charts.line = function(args) {
     };
 
 	this.brushing = function() {
-        var args = this.args;
+        var args = this.args,
+            chartContext = this;
 
         if (args.brushing === false) {
             return this;
@@ -696,6 +697,19 @@ charts.line = function(args) {
         rollover.on('mouseup', function() {
             mouseDown = false;
             isDragging = false;
+
+
+            var extentX0 = +extentRect.attr('x'),
+                extentX1 = extentX0 + (+extentRect.attr('width'));
+
+            args.min_x = args.scales.X.invert(extentX0);
+            args.max_x = args.scales.X.invert(extentX1);
+
+            // TODO: set y axis min/max to match extent
+
+            // redraw it all
+            // is there a nicer way to do this?
+            MG.data_graphic(args);
         });
 
         return this;
