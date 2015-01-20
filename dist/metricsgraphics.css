@@ -362,6 +362,6 @@ circle.mg-points-mono {
     font-size: 0.6rem;
 }
 
-.mg-brush rect.extent {
-    opacity: 0.3;
+.mg-brush rect.mg-extent {
+    fill: rgba(0,0,0,0.3);
 }

@@ -630,25 +630,12 @@ charts.line = function(args) {
     };
 
     this.mouseDown = function(args) {
-        var chartContext = this;
-
         return function(d, i) {
-            if (args.brushing) {
-
-                var passThruMouseDown = generateMouseEvent('mousedown');
-
-                chartContext.brushGroup
-                    .style('pointer-events', 'all')
-                    .node().dispatchEvent(passThruMouseDown);
-            }
-
             console.log('mouseDown', arguments);
         };
     };
 
     this.mouseUp = function(args) {
-        var chartContext = this;
-
         return function(d, i) {
             console.log('mouseUp', arguments);
         };
@@ -666,42 +653,52 @@ charts.line = function(args) {
             return this;
         }
 
-		var brush,
+		var isDragging = false,
+            mouseDown = false,
             svg = d3.select(args.target).select('svg'),
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
-            group;
+            brushingGroup = rollover.insert('g', '*')
+                .classed('mg-brush', true),
+            extentRect = brushingGroup.append('rect')
+                .attr({
+                    opacity: 0,
+                    y: args.top,
+                    height: args.height - args.bottom - args.top - args.buffer
+                })
+                .classed('mg-extent', true);
 
-		brush = d3.svg.brush()
-		    .x(args.scales.X)
-            .on('brushstart', function() {
-                rollover.style('pointer-events', 'none');
-            })
-            .on('brushend', this.brushend(rollover));
-
-        group = svg.append('g')
-            .on('mousedown', function() {
-                console.log('brush mousedown');
+        rollover.on('mousedown', function() {
+            mouseDown = true;
+            isDragging = false;
+            extentRect.attr({
+                x: d3.mouse(this)[0],
+                opacity: 0
             });
+        });
 
-        group.call(brush)
-            .style('pointer-events', 'none')
-            .classed('mg-brush', true)
-            .selectAll('rect')
-                .attr('height', args.height - args.bottom);
+        rollover.on('mousemove', function() {
+            if (mouseDown) {
+                var extentX = +extentRect.attr('x'),
+                    mouseX = d3.mouse(this)[0],
+                    newX = Math.min(extentX, mouseX),
+                    width = Math.max(extentX, mouseX) - Math.min(extentX, mouseX);
 
-        brush
+                isDragging = true;
 
-        this.brush = brush;
-        this.brushGroup = group;
+                extentRect.attr({
+                    x: newX,
+                    width: width,
+                    opacity: 1
+                });
+            }
+        });
+
+        rollover.on('mouseup', function() {
+            mouseDown = false;
+            isDragging = false;
+        });
 
         return this;
-	};
-
-	this.brushend = function(rollover) {
-        return function() {
-          rollover.style('pointer-events', 'all');
-          d3.select(this).style('pointer-events', 'none');
-        };
 	};
 
     this.init(args);
