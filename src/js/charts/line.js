@@ -683,6 +683,7 @@ charts.line = function(args) {
 
         var isDragging = false,
             mouseDown = false,
+            originX,
             svg = d3.select(args.target).select('svg'),
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
             brushingGroup,
@@ -717,21 +718,22 @@ charts.line = function(args) {
         rollover.on('mousedown', function() {
             mouseDown = true;
             isDragging = false;
+            originX = d3.mouse(this)[0];
             extentRect.attr({
                 x: d3.mouse(this)[0],
-                opacity: 0
+                opacity: 0,
+                width: 0
             });
         });
 
         // mousemove / drag, expand area selection
         rollover.on('mousemove', function() {
             if (mouseDown) {
-                var extentX = +extentRect.attr('x'),
-                    mouseX = d3.mouse(this)[0],
-                    newX = Math.min(extentX, mouseX),
-                    width = Math.max(extentX, mouseX) - Math.min(extentX, mouseX);
-
                 isDragging = true;
+
+                var mouseX = d3.mouse(this)[0],
+                    newX = Math.min(originX, mouseX),
+                    width = Math.max(originX, mouseX) - newX;
 
                 extentRect.attr({
                     x: newX,
