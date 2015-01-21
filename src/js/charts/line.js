@@ -166,27 +166,30 @@ charts.line = function(args) {
     };
 
     this.rollover = function() {
-        var svg = mg_get_svg_child_of(args.target);
-        var $svg = $($(args.target).find('svg').get(0));
-        var g;
+        var svg = mg_get_svg_child_of(args.target),
+            g,
+            dataPointContainer;
 
         //remove the old rollovers if they already exist
-        $svg.find('.mg-rollover-rect').remove();
-        $svg.find('.mg-voronoi').remove();
+        svg.select('.mg-rollover-rect').remove();
+        svg.select('.mg-voronoi').remove();
 
-        //remove the old rollover text and circle if they already exist
-        $svg.find('.mg-active-datapoint').remove();
-        $svg.find('.mg-line-rollover-circle').remove();
+        //remove the old rollover circle if they already exist
+        svg.select('.mg-line-rollover-circle').remove();
 
         //rollover text
-        svg.append('g')
-            .attr('class', 'mg-active-datapoint-container')
-            .attr('transform', 'translate(' + (args.width - args.right) + ',' + (args.top / 2) + ')')
-            .append('text')
-                .attr('class', 'mg-active-datapoint')
-                .classed('mg-active-datapoint-small', args.use_small_class)
-                .attr('xml:space', 'preserve')
-                .attr('text-anchor', 'end');
+        dataPointContainer = svg.select('.mg-active-datapoint-container');
+
+        if (dataPointContainer.empty()){
+            svg.append('g')
+                .attr('class', 'mg-active-datapoint-container')
+                .attr('transform', 'translate(' + (args.width - args.right) + ',' + (args.top / 2) + ')')
+                .append('text')
+                    .attr('class', 'mg-active-datapoint')
+                    .classed('mg-active-datapoint-small', args.use_small_class)
+                    .attr('xml:space', 'preserve')
+                    .attr('text-anchor', 'end');
+        }
 
         //append circle
         svg.selectAll('.mg-line-rollover-circle')
