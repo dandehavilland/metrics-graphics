@@ -253,11 +253,16 @@ charts.line = function(args) {
                 })
                 .rollup(function(v) { return v[0]; })
                 .entries(d3.merge(args.data.map(function(d) { return d; })))
-                .map(function(d) { return d.values; });
+                .map(function(d) { return d.values; })
+                .filter(function(d) { return d; });
 
             //add the voronoi rollovers
+
+            var voronoiData = voronoi(data_nested)
+                .filter(function(d) { return d; });
+
             g.selectAll('path')
-                .data(voronoi(data_nested))
+                .data(voronoiData)
                 .enter()
                     .append('path')
                         .filter(function(d) { return d !== undefined; })
@@ -748,7 +753,8 @@ charts.line = function(args) {
             mouseDown = false;
 
             var xScale = args.scales.X,
-                yScale = args.scales.Y;
+                yScale = args.scales.Y,
+                flatData = [].concat.apply([], args.data);
 
             if (isDragging) {
                 isDragging = false;
@@ -765,12 +771,11 @@ charts.line = function(args) {
                     args.min_x = d3.time.day.round(xScale.invert(extentX0));
                     args.max_x = Math.max(
                         resolution.offset(args.min_x, 1),
-                        d3.time.day.round(xScale.invert(extentX1))
-                    );
+                        d3.time.day.round(xScale.invert(extentX1)));
 
                     xScale.domain([args.min_x, args.max_x]);
 
-                    boundedData = args.data[0].filter(function(d) {
+                    boundedData = flatData.filter(function(d) {
                         var val = d[args.x_accessor];
                         return val >= args.min_x && val <= args.max_x;
                     });
