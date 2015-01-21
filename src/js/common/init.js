@@ -73,9 +73,9 @@ function init(args) {
         .append('clipPath')
             .attr('id', 'mg-plot-window-' + mg_strip_punctuation(args.target))
         .append('svg:rect')
-            .attr('x', args.left)
+            .attr('x', args.left + args.buffer + 1)
             .attr('y', args.top)
-            .attr('width', args.width - args.left - args.right - args.buffer)
+            .attr('width', args.width - args.left - args.right - (args.buffer * 2) - 2)
             .attr('height', args.height - args.top - args.bottom - args.buffer + 1);
 
     //has the width or height changed?

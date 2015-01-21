@@ -63,10 +63,22 @@ charts.line = function(args) {
 
         //for building the optional legend
         var legend = '';
-        var this_data;
+        var isBounded = !!(args.min_x || args.max_x || args.min_y || args.max_y);
 
         for (var i = args.data.length - 1; i >= 0; i--) {
-            this_data = args.data[i];
+            var boundedData = args.data[i];
+
+            // !isBounded ? args.data[i] : args.data[i].filter(function(d) {
+            //     var xVal = d[args.x_accessor],
+            //         yVal = d[args.y_accessor];
+            //
+            //     return (args.min_x && xVal > args.min_x)
+            //         && (args.max_x && xVal < args.max_x)
+            //         && (args.min_y && yVal > args.min_y)
+            //         && (args.max_y && yVal < args.max_y);
+            // });
+            //
+            // console.log(isBounded, boundedData.length, args.min_x, args.max_x, args.min_y, args.max_y);
 
             //override increment if we have a custom increment series
             var line_id = i + 1;
@@ -93,12 +105,12 @@ charts.line = function(args) {
                     d3.select($area.get(0))
                         .transition()
                             .duration(updateTransitionDuration)
-                            .attr('d', area(args.data[i]))
-                            .attr('clip-path', 'url(#mg-plot-window)');
+                            .attr('d', area(boundedData))
+                            .attr('clip-path', 'url(#mg-plot-window-'+ mg_strip_punctuation(args.target)+')');
                 } else { //otherwise, add the area
                     svg.append('path')
                         .attr('class', 'mg-main-area ' + 'mg-area' + (line_id) + '-color')
-                        .attr('d', area(args.data[i]))
+                        .attr('d', area(boundedData))
                         .attr('clip-path', 'url(#mg-plot-window-' + mg_strip_punctuation(args.target) + ')');
                 }
             } else if ($area.length > 0) {
@@ -112,24 +124,24 @@ charts.line = function(args) {
                 d3.select($existing_line.get(0))
                     .transition()
                         .duration(updateTransitionDuration)
-                        .attr('d', line(args.data[i]));
+                        .attr('d', line(boundedData));
             }
             else { //otherwise...
                 //if we're animating on load, animate the line from its median value
                 if (args.animate_on_load) {
-                    data_median = d3.median(args.data[i], mapToY);
+                    data_median = d3.median(boundedData, mapToY);
 
                     svg.append('path')
                         .attr('class', 'mg-main-line ' + 'mg-line' + (line_id) + '-color')
-                        .attr('d', flat_line(args.data[i]))
+                        .attr('d', flat_line(boundedData))
                         .transition()
                             .duration(1000)
-                            .attr('d', line(args.data[i]))
+                            .attr('d', line(boundedData))
                             .attr('clip-path', 'url(#mg-plot-window-' + mg_strip_punctuation(args.target) + ')');
                 } else { //or just add the line
                     svg.append('path')
                         .attr('class', 'mg-main-line ' + 'mg-line' + (line_id) + '-color')
-                        .attr('d', line(args.data[i]))
+                        .attr('d', line(boundedData))
                         .attr('clip-path', 'url(#mg-plot-window-' + mg_strip_punctuation(args.target) + ')');
                 }
             }
@@ -717,38 +729,47 @@ charts.line = function(args) {
         // mouseup, finish area selection
         rollover.on('mouseup', function() {
             mouseDown = false;
+
+            var xScale = args.scales.X,
+            yScale = args.scales.Y;
+
             if (isDragging) {
                 isDragging = false;
 
                 var extentX0 = +extentRect.attr('x'),
                     extentX1 = extentX0 + (+extentRect.attr('width')),
-                    scale = args.scales.X.copy();
+                    yBounds;
 
-                args.min_x = args.scales.X.invert(extentX0);
-                args.max_x = args.scales.X.invert(extentX1);
+                args.min_x = xScale.invert(extentX0);
+                args.max_x = xScale.invert(extentX1);
 
-                scale.domain([args.min_x, args.max_x]);
+                xScale.domain([args.min_x, args.max_x]);
 
-                // var bisect = d3.bisector(function(d) { return d.date; }).right;
-                // var correspondingY0 = args.data[0][bisect(args.data[0], args.min_x)];
-                // var correspondingY1 = args.data[0][bisect(args.data[0], args.max_x)];
+                var boundedData = args.data[0].filter(function(d) {
+                    var val = d[args.x_accessor];
+                    return val >= args.min_x && val <= args.max_x;
+                });
 
-                console.log(scale.domain());
+                yBounds = d3.extent(boundedData, function(d) {
+                    return d[args.y_accessor];
+                });
 
-                // var correspondingY = [];
-                // for (x = args.min_x; x < args.max_x; x++) {
-                //
-                //
-                // }
+                yScale.domain(yBounds);
 
-                // TODO: set y axis min/max to match extent
+                // set y bounds with a 10% padding
+                args.min_y = yBounds[0] - (yBounds[0] * 0.1);
+                args.max_y = yBounds[1] + (yBounds[1] * 0.1);
 
                 // redraw it all
                 // is there a nicer way to do this?
                 MG.data_graphic(args);
             } else {
-                args.min_x = args.scales.X[0];
-                args.max_x = args.scales.X[args.scales.X.length-1];
+                args.min_x = xScale[0];
+                args.max_x = xScale[xScale.length-1];
+
+                args.min_y = yScale[0];
+                args.max_y = yScale[yScale.length-1];
+
                 MG.data_graphic(args);
             }
         });
