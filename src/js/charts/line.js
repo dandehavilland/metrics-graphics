@@ -13,8 +13,9 @@ charts.line = function(args) {
 
     this.mainPlot = function() {
         var svg = mg_get_svg_child_of(args.target),
-			data_median = 0,
-			confidence_area,
+            data_median = 0,
+            confidence_area,
+            chartContext = this,
             updateTransitionDuration = (args.transition_on_update) ? 1000 : 0,
             mapToY = function(d) { return d[args.y_accessor]; };
 
@@ -50,9 +51,6 @@ charts.line = function(args) {
             .x(args.scalefns.xf)
             .y(args.scalefns.yf)
             .interpolate(args.interpolate);
-
-		// we need the line later for brushing
-		// this.line = line;
 
         //for animating line on first load
         var flat_line = d3.svg.line()
@@ -120,11 +118,20 @@ charts.line = function(args) {
             //add the line, if it already exists, transition the fine gentleman
             var $existing_line = $(args.target).find('svg path.mg-main-line.mg-line' + (line_id) + '-color').first();
             if ($existing_line.length > 0) {
+                var rolloverCircles = svg.selectAll('circle.mg-line-rollover-circle');
+                rolloverCircles.remove();
+
+                var chartContext = this;
+                chartContext.preventRollover = true;
+
                 $(svg.node()).find('.mg-y-axis').after($existing_line.detach());
                 d3.select($existing_line.get(0))
                     .transition()
                         .duration(updateTransitionDuration)
-                        .attr('d', line(boundedData));
+                        .attr('d', line(boundedData))
+                        .each('end', function() {
+                            chartContext.preventRollover = false;
+                        });
             }
             else { //otherwise...
                 //if we're animating on load, animate the line from its median value
@@ -409,6 +416,8 @@ charts.line = function(args) {
     this.rolloverOn = function(args) {
         var svg = mg_get_svg_child_of(args.target);
         var fmt;
+        var chartContext = this;
+
         switch(args.processed.x_time_frame) {
             case 'seconds':
                 fmt = d3.time.format('%b %e, %Y  %H:%M:%S');
@@ -424,6 +433,9 @@ charts.line = function(args) {
         }
 
         return function(d, i) {
+            if (chartContext.preventRollover) {
+                return;
+            }
 
             if (args.aggregate_rollover && args.data.length > 1) {
 
@@ -661,7 +673,7 @@ charts.line = function(args) {
         return this;
     };
 
-	this.brushing = function() {
+    this.brushing = function() {
         var args = this.args,
             chartContext = this;
 
@@ -669,7 +681,7 @@ charts.line = function(args) {
             return this;
         }
 
-		var isDragging = false,
+        var isDragging = false,
             mouseDown = false,
             svg = d3.select(args.target).select('svg'),
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
@@ -814,7 +826,7 @@ charts.line = function(args) {
         // });
 
         return this;
-	};
+    };
 
     this.init(args);
 
