@@ -734,24 +734,33 @@ charts.line = function(args) {
             mouseDown = false;
 
             var xScale = args.scales.X,
-            yScale = args.scales.Y;
+                yScale = args.scales.Y;
 
             if (isDragging) {
                 isDragging = false;
 
                 var extentX0 = +extentRect.attr('x'),
                     extentX1 = extentX0 + (+extentRect.attr('width')),
-                    yBounds;
+                    resolution = args.brushing_interval,
+                    yBounds,
+                    boundedData = [],
+                    offset = 0;
 
-                args.min_x = xScale.invert(extentX0);
-                args.max_x = xScale.invert(extentX1);
+                // is there at least one data point in the chosen selection? if not, increase the range until there is.
+                while (boundedData.length == 0) {
+                    args.min_x = d3.time.day.round(xScale.invert(extentX0));
+                    args.max_x = Math.max(
+                        resolution.offset(args.min_x, 1),
+                        d3.time.day.round(xScale.invert(extentX1))
+                    );
 
-                xScale.domain([args.min_x, args.max_x]);
+                    xScale.domain([args.min_x, args.max_x]);
 
-                var boundedData = args.data[0].filter(function(d) {
-                    var val = d[args.x_accessor];
-                    return val >= args.min_x && val <= args.max_x;
-                });
+                    boundedData = args.data[0].filter(function(d) {
+                        var val = d[args.x_accessor];
+                        return val >= args.min_x && val <= args.max_x;
+                    });
+                }
 
                 yBounds = d3.extent(boundedData, function(d) {
                     return d[args.y_accessor];
