@@ -362,6 +362,18 @@ circle.mg-points-mono {
     font-size: 0.6rem;
 }
 
+.mg-brush-container {
+    cursor: crosshair;
+}
+
+.mg-brush-container.mg-brushing {
+    cursor: ew-resize;
+}
+
+.mg-brush-container.mg-brushed {
+    cursor: zoom-out;
+}
+
 .mg-brush rect.mg-extent {
     fill: rgba(0,0,0,0.3);
 }

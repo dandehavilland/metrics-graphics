@@ -415,6 +415,12 @@ charts.line = function(args) {
                 .on('mouseover')(args.data[0][0], 0);
         }
 
+        // setup brushing state
+        if (args.brushing && args.min_x && args.max_x) {
+            svg.select('.mg-rollover-rect, .mg-voronoi')
+                .classed('mg-brushed', true);
+        }
+
         return this;
     };
 
@@ -505,7 +511,7 @@ charts.line = function(args) {
                     //trigger mouseover on matching line in .linked charts
                     d3.selectAll('.mg-line' + d.line_id + '-color.roll_' + id)
                         .each(function(d, i) {
-                            d3.select(this).on('g')(d,i);
+                            d3.select(this).on('mouseover')(d,i);
                         });
                 }
             }
@@ -697,6 +703,8 @@ charts.line = function(args) {
             zoomLevel = 0,
             maxZooomLevel = 10;
 
+        rollover.classed('mg-brush-container', true);
+
         brushingGroup = rollover.insert('g', '*')
             .classed('mg-brush', true);
 
@@ -724,6 +732,7 @@ charts.line = function(args) {
             mouseDown = true;
             isDragging = false;
             originX = d3.mouse(this)[0];
+            rollover.classed('mg-brushed', false);
             extentRect.attr({
                 x: d3.mouse(this)[0],
                 opacity: 0,
@@ -735,6 +744,7 @@ charts.line = function(args) {
         rollover.on('mousemove', function() {
             if (mouseDown) {
                 isDragging = true;
+                rollover.classed('mg-brushing', true);
 
                 var mouseX = d3.mouse(this)[0],
                     newX = Math.min(originX, mouseX),
@@ -751,6 +761,8 @@ charts.line = function(args) {
         // mouseup, finish area selection
         rollover.on('mouseup', function() {
             mouseDown = false;
+
+            rollover.classed('mg-brushing', false);
 
             var xScale = args.scales.X,
                 yScale = args.scales.Y,
