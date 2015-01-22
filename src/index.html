@@ -196,7 +196,8 @@
                 + '  target: ".result",\n'
                 + '  x_accessor: "year",\n'
                 + '  y_accessor: "sightings",\n'
-                + '  interpolate: "monotone"\n'
+                + '  interpolate: "monotone",\n'
+                + '  brushing: true\n'
                 + '});';
 
         persisted = JSON.parse(localStorage.getItem(mgKey), null, 2) || {};
