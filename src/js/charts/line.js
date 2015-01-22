@@ -256,10 +256,10 @@ charts.line = function(args) {
                 .map(function(d) { return d.values; })
                 .filter(function(d) { return d; });
 
-            //add the voronoi rollovers
-
             var voronoiData = voronoi(data_nested)
-                .filter(function(d) { return d; });
+                // quickfix: filter out any empty points (happens where lines overlap)
+                // TODO: find the root of this
+                .filter(function(d) { return d && d.length > 0; });
 
             g.selectAll('path')
                 .data(voronoiData)
