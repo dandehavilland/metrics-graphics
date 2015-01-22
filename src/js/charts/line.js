@@ -699,7 +699,6 @@ charts.line = function(args) {
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
             brushingGroup,
             extentRect,
-            resetRect,
             zoomLevel = 0,
             maxZooomLevel = 10;
 
@@ -715,17 +714,6 @@ charts.line = function(args) {
                 height: args.height - args.bottom - args.top - args.buffer
             })
             .classed('mg-extent', true);
-
-        // resetRect = brushingGroup.append('rect')
-        //     .attr({
-        //         x: args.width - 15,
-        //         y: 15,
-        //         width: 15,
-        //         height: 15,
-        //         fill: 'rgba(0,0,0,0,5)'
-        //     })
-        //     .classed('mg-reset', true);
-
 
         // mousedown, start area selection
         rollover.on('mousedown', function() {
@@ -774,24 +762,62 @@ charts.line = function(args) {
                 var extentX0 = +extentRect.attr('x'),
                     extentX1 = extentX0 + (+extentRect.attr('width')),
                     resolution = args.brushing_interval,
+                    interval,
                     yBounds,
                     boundedData = [],
                     offset = 0;
 
+
+                if (!resolution) {
+                    if (args.time_series) {
+                        resolution = d3.time.day;
+                    } else {
+                        resolution = 1;
+                    }
+                }
+
+                // work with N as integer
+                if (typeof resolution === 'number') {
+                    interval = {
+                        round: function(val) {
+                            return resolution * Math.round(val / resolution);
+                        },
+                        offset: function(val, count) {
+                            return val + (resolution * count);
+                        }
+                    };
+                }
+                // work with d3.time.[interval]
+                else if (typeof resolution.round === 'function'
+                         && typeof resolution.offset === 'function' ) {
+                    interval = resolution;
+                }
+                else {
+                    console.warn('The `brushing_interval` provided is invalid. It must be either a number or expose both `round` and `offset` methods');
+                }
+
+
                 // is there at least one data point in the chosen selection? if not, increase the range until there is.
-                while (boundedData.length == 0) {
-                    args.min_x = d3.time.day.round(xScale.invert(extentX0));
+                var iterations = 0;
+                while (boundedData.length == 0 && iterations <= flatData.length) {
+                    args.min_x = interval.round(xScale.invert(extentX0));
                     args.max_x = Math.max(
-                        resolution.offset(args.min_x, 1),
-                        d3.time.day.round(xScale.invert(extentX1)));
+                        interval.offset(args.min_x, 1),
+                        interval.round(xScale.invert(extentX1)));
+
 
                     xScale.domain([args.min_x, args.max_x]);
+
+                    console.log(args.min_x, args.max_x);
 
                     boundedData = flatData.filter(function(d) {
                         var val = d[args.x_accessor];
                         return val >= args.min_x && val <= args.max_x;
                     });
+
+                    iterations++;
                 }
+
 
                 yBounds = d3.extent(boundedData, function(d) {
                     return d[args.y_accessor];
@@ -836,12 +862,6 @@ charts.line = function(args) {
         //     MG.data_graphic(args);
         //
         //     console.log('mousewheel.zoom');
-        // });
-
-        // resetRect.on('click', function() {
-        //     args.min_x = args.scales.X[0];
-        //     args.max_x = args.scales.X[args.scales.X.length-1];
-        //     MG.data_graphic(args);
         // });
 
         return this;

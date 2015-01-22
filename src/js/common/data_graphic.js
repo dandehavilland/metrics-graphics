@@ -78,7 +78,7 @@ MG.data_graphic = function() {
         max_data_size: null,           // explicitly specify the the max number of line series, for use with custom_line_color_map
         aggregate_rollover: false,      // links the lines in a multi-line chart
         brushing: false,                // enable brushing functionality
-        brushing_interval: d3.time.day  // maximum resolution for brushing
+        brushing_interval: null         // maximum resolution for brushing
     };
 
     defaults.point = {
