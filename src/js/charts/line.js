@@ -454,11 +454,7 @@ charts.line = function(args) {
 
                 d.values.forEach(function(datum) {
 
-                  if (datum[args.x_accessor] >= args.processed.min_x &&
-                      datum[args.x_accessor] <= args.processed.max_x &&
-                      datum[args.y_accessor] >= args.processed.min_y &&
-                      datum[args.y_accessor] <= args.processed.max_y
-                  ){
+                  if (is_within_bounds(d, args)){
                     var circle = svg.select('circle.mg-line' + datum.line_id + '-color')
                         .attr({
                             'cx': function() {
@@ -475,15 +471,9 @@ charts.line = function(args) {
             } else {
 
                 //show circle on mouse-overed rect
-                if (d[args.x_accessor] >= args.processed.min_x &&
-                    d[args.x_accessor] <= args.processed.max_x &&
-                    d[args.y_accessor] >= args.processed.min_y &&
-                    d[args.y_accessor] <= args.processed.max_y
-                ){
+                if (is_within_bounds(d, args)){
                     svg.selectAll('circle.mg-line-rollover-circle')
-                        .attr('class', "")
-                        .attr('class', 'mg-area' + d.line_id + '-color')
-                        .classed('mg-line-rollover-circle', true)
+                        .classed('mg-area' + d.line_id + '-color', true)
                         .attr('cx', function() {
                             return args.scales.X(d[args.x_accessor]).toFixed(2);
                         })
@@ -894,4 +884,14 @@ function get_brush_interval(args) {
     }
 
     return interval;
+}
+
+function is_within_bounds(datum, args) {
+    var x = +datum[args.x_accessor],
+        y = +datum[args.y_accessor];
+
+    return x >= (+args.processed.min_x || x)
+        && x <= (+args.processed.max_x || x)
+        && y >= (+args.processed.min_y || y)
+        && y <= (+args.processed.max_y || y);
 }
