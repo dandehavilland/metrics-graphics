@@ -414,7 +414,6 @@ charts.line = function(args) {
                 .on('mouseover')(args.data[0][0], 0);
         }
 
-        // setup brushing state
         if (args.brushing && args.min_x && args.max_x) {
             svg.select('.mg-rollover-rect, .mg-voronoi')
                 .classed('mg-brushed', true);
@@ -667,17 +666,21 @@ charts.line = function(args) {
     };
 
     this.mouseDown = function(args) {
+        var chartContext = this;
+
         return function(d, i) {
             if (args.mousedown) {
-                args.mousedown(d, i);
+                args.mousedown(d, i, chartContext);
             }
         };
     };
 
     this.mouseUp = function(args) {
+        var chartContext = this;
+
         return function(d, i) {
             if (args.mouseup) {
-                args.mouseup(d, i);
+                args.mouseup(d, i, chartContext);
             }
         };
     };
@@ -757,49 +760,19 @@ charts.line = function(args) {
 
             var xScale = args.scales.X,
                 yScale = args.scales.Y,
-                flatData = [].concat.apply([], args.data);
+                flatData = [].concat.apply([], args.data),
+                boundedData,
+                yBounds,
+                xBounds,
+                extentX0 = +extentRect.attr('x'),
+                extentX1 = extentX0 + (+extentRect.attr('width')),
+                interval = get_brush_interval(args),
+                offset = 0;
 
+            // if we're zooming in: calculate the domain for x and y axes based on the selected rect
             if (isDragging) {
                 isDragging = false;
-
-                var extentX0 = +extentRect.attr('x'),
-                    extentX1 = extentX0 + (+extentRect.attr('width')),
-                    resolution = args.brushing_interval,
-                    interval,
-                    yBounds,
-                    boundedData = [],
-                    offset = 0;
-
-
-                if (!resolution) {
-                    if (args.time_series) {
-                        resolution = d3.time.day;
-                    } else {
-                        resolution = 1;
-                    }
-                }
-
-                // work with N as integer
-                if (typeof resolution === 'number') {
-                    interval = {
-                        round: function(val) {
-                            return resolution * Math.round(val / resolution);
-                        },
-                        offset: function(val, count) {
-                            return val + (resolution * count);
-                        }
-                    };
-                }
-                // work with d3.time.[interval]
-                else if (typeof resolution.round === 'function'
-                         && typeof resolution.offset === 'function' ) {
-                    interval = resolution;
-                }
-                else {
-                    console.warn('The `brushing_interval` provided is invalid. It must be either a number or expose both `round` and `offset` methods');
-                }
-
-
+                boundedData = [];
                 // is there at least one data point in the chosen selection? if not, increase the range until there is.
                 var iterations = 0;
                 while (boundedData.length === 0 && iterations <= flatData.length) {
@@ -808,11 +781,6 @@ charts.line = function(args) {
                         interval.offset(args.min_x, 1),
                         interval.round(xScale.invert(extentX1)));
 
-
-                    xScale.domain([args.min_x, args.max_x]);
-
-                    console.log(args.min_x, args.max_x);
-
                     boundedData = flatData.filter(function(d) {
                         var val = d[args.x_accessor];
                         return val >= args.min_x && val <= args.max_x;
@@ -820,30 +788,35 @@ charts.line = function(args) {
 
                     iterations++;
                 }
-
-
-                yBounds = d3.extent(boundedData, function(d) {
-                    return d[args.y_accessor];
-                });
-
-                yScale.domain(yBounds);
-
-                // set y bounds with a 10% padding
-                args.min_y = yBounds[0] - (yBounds[0] * 0.1);
-                args.max_y = yBounds[1] + (yBounds[1] * 0.1);
-
-                // redraw it all
-                // is there a nicer way to do this?
-                MG.data_graphic(args);
-            } else {
-                args.min_x = xScale[0];
-                args.max_x = xScale[xScale.length-1];
-
-                args.min_y = yScale[0];
-                args.max_y = yScale[yScale.length-1];
-
-                MG.data_graphic(args);
             }
+            // if we're using out: use all of the data
+            else {
+                boundedData = flatData;
+            }
+
+            xBounds = d3.extent(boundedData, function(d) { return d[args.x_accessor]; });
+            args.min_x = xBounds[0];
+            args.max_x = xBounds[1];
+            xScale.domain(xBounds);
+
+            yBounds = d3.extent(boundedData, function(d) { return d[args.y_accessor]; });
+            // add 10% padding on the y axis for better display
+            args.min_y = yBounds[0] * 0.9;
+            args.max_y = yBounds[1] * 1.1;
+            yScale.domain(yBounds);
+
+            // trigger the brushing callback
+            if (args.brushing_callback) {
+                args.brushing_callback.apply(this, [{
+                    min_x: args.min_x,
+                    max_x: args.max_x,
+                    min_y: args.min_y,
+                    max_y: args.max_y
+                }]);
+            }
+
+            // redraw the chart
+            MG.data_graphic(args);
         });
 
         // mousewheel zoom
@@ -874,3 +847,42 @@ charts.line = function(args) {
 
     return this;
 };
+
+function get_brush_interval(args) {
+    var resolution = args.brushing_interval,
+        interval;
+
+    if (!resolution) {
+        if (args.time_series) {
+            resolution = d3.time.day;
+        } else {
+            resolution = 1;
+        }
+    }
+
+    // work with N as integer
+    if (typeof resolution === 'number') {
+        interval = {
+            round: function(val) {
+                return resolution * Math.round(val / resolution);
+            },
+            offset: function(val, count) {
+                return val + (resolution * count);
+            }
+        };
+    }
+    // work with d3.time.[interval]
+    else if (typeof resolution.round === 'function'
+             && typeof resolution.offset === 'function' ) {
+        interval = resolution;
+    }
+    else {
+        console.warn('The `brushing_interval` provided is invalid. It must be either a number or expose both `round` and `offset` methods');
+    }
+
+    return interval;
+}
+
+function determine_brush_range() {
+
+}
