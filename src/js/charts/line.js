@@ -454,7 +454,7 @@ charts.line = function(args) {
 
                 d.values.forEach(function(datum) {
 
-                  if (is_within_bounds(d, args)){
+                  if (is_within_bounds(datum, args)){
                     var circle = svg.select('circle.mg-line' + datum.line_id + '-color')
                         .attr({
                             'cx': function() {
