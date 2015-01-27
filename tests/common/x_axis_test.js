@@ -209,3 +209,29 @@ test('correctly calculates min and max values for bar chart', function() {
     equal(args.processed.min_x, 0, 'min is correct');
     equal(args.processed.max_x, 12, 'max is correct');
 });
+
+
+test('correctly calculates min and max values when brushing', function() {
+    var args;
+
+    // single series
+    args = {
+        processed: {},
+        brushing: true,
+        brushed_min_x: 5,
+        brushed_max_x: 6,
+        x_accessor: 'x',
+        chart_type: 'line',
+        data: [
+            [
+                {x: 4},
+                {x: 5},
+                {x: 6},
+                {x: 7}
+            ]
+        ]
+    };
+    mg_find_min_max_x(args);
+    equal(args.processed.min_x, 5, 'min is correct for single series');
+    equal(args.processed.max_x, 6, 'max is correct for single series');
+});

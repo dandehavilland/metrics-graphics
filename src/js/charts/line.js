@@ -414,7 +414,7 @@ charts.line = function(args) {
                 .on('mouseover')(args.data[0][0], 0);
         }
 
-        if (args.brushing && args.min_x && args.max_x) {
+        if (args.brushing && (args.brushed_min_x || args.brushed_max_x || args.brushed_min_y || args.brushed_max_y)) {
             svg.select('.mg-rollover-rect, .mg-voronoi')
                 .classed('mg-brushed', true);
         }
@@ -767,7 +767,9 @@ charts.line = function(args) {
                 extentX0 = +extentRect.attr('x'),
                 extentX1 = extentX0 + (+extentRect.attr('width')),
                 interval = get_brush_interval(args),
-                offset = 0;
+                offset = 0,
+                mapDtoX = function(d) { return d[args.x_accessor]; },
+                mapDtoY = function(d) { return d[args.y_accessor]; };
 
             // if we're zooming in: calculate the domain for x and y axes based on the selected rect
             if (isDragging) {
@@ -776,44 +778,55 @@ charts.line = function(args) {
                 // is there at least one data point in the chosen selection? if not, increase the range until there is.
                 var iterations = 0;
                 while (boundedData.length === 0 && iterations <= flatData.length) {
-                    args.min_x = interval.round(xScale.invert(extentX0));
-                    args.max_x = Math.max(
+                    args.brushed_min_x = interval.round(xScale.invert(extentX0));
+                    args.brushed_max_x = Math.max(
                         interval.offset(args.min_x, 1),
                         interval.round(xScale.invert(extentX1)));
 
                     boundedData = flatData.filter(function(d) {
                         var val = d[args.x_accessor];
-                        return val >= args.min_x && val <= args.max_x;
+                        return val >= args.brushed_min_x && val <= args.brushed_max_x;
                     });
 
                     iterations++;
                 }
+
+                xBounds = d3.extent(boundedData, mapDtoX);
+                args.brushed_min_x = xBounds[0];
+                args.brushed_max_x = xBounds[1];
+                xScale.domain(xBounds);
+
+                yBounds = d3.extent(boundedData, mapDtoY);
+                // add 10% padding on the y axis for better display
+                // @TODO: make this an option
+                args.brushed_min_y = yBounds[0] * 0.9;
+                args.brushed_max_y = yBounds[1] * 1.1;
+                yScale.domain(yBounds);
+
             }
             // if we're using out: use all of the data
             else {
+                delete args.brushed_max_x;
+                delete args.brushed_min_x;
+                delete args.brushed_max_y;
+                delete args.brushed_min_y;
+
                 boundedData = flatData;
+                xBounds = d3.extent(boundedData, mapDtoX);
+                yBounds = d3.extent(boundedData, mapDtoY);
             }
-
-            xBounds = d3.extent(boundedData, function(d) { return d[args.x_accessor]; });
-            args.min_x = xBounds[0];
-            args.max_x = xBounds[1];
-            xScale.domain(xBounds);
-
-            yBounds = d3.extent(boundedData, function(d) { return d[args.y_accessor]; });
-            // add 10% padding on the y axis for better display
-            args.min_y = yBounds[0] * 0.9;
-            args.max_y = yBounds[1] * 1.1;
-            yScale.domain(yBounds);
 
             // trigger the brushing callback
             if (args.brushing_callback) {
                 args.brushing_callback.apply(this, [{
-                    min_x: args.min_x,
-                    max_x: args.max_x,
-                    min_y: args.min_y,
-                    max_y: args.max_y
+                    min_x: xBounds[0],
+                    max_x: xBounds[1],
+                    min_y: yBounds[0],
+                    max_y: yBounds[1]
                 }]);
             }
+
+
 
             // redraw the chart
             MG.data_graphic(args);
@@ -881,8 +894,4 @@ function get_brush_interval(args) {
     }
 
     return interval;
-}
-
-function determine_brush_range() {
-
 }

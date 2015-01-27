@@ -56,7 +56,16 @@ function x_axis(args) {
         mg_point_add_size_scale(args);
     }
 
+    if (args.chart_type === 'bar') {
+        args.additional_buffer = args.buffer * 5;
+    } else {
+        args.additional_buffer = 0;
+    }
+
     mg_find_min_max_x(args);
+
+    mg_select_xax_format(args);
+
 
     args.scales.X = (args.time_series)
         ? d3.time.scale()
@@ -444,8 +453,7 @@ function mg_find_min_max_x(args) {
         all_data = [].concat.apply([], args.data),
         mapDtoX = function(d) { return d[args.x_accessor]; };
 
-    // clear the cached xax_format in case we need to recalculate
-    delete args.xax_format;
+    args.x_axis_negative = false;
 
     if (args.chart_type === 'line' || args.chart_type === 'point' || args.chart_type === 'histogram') {
         extent_x = d3.extent(all_data, mapDtoX);
@@ -487,32 +495,36 @@ function mg_find_min_max_x(args) {
         args.xax_count = 2;
     }
 
-    min_x = args.min_x ? args.min_x : min_x;
-    max_x = args.max_x ? args.max_x : max_x;
-    args.x_axis_negative = false;
+    min_x = args.min_x || min_x;
+    max_x = args.max_x || max_x;
 
-    args.processed.min_x = min_x;
-    args.processed.max_x = max_x;
+    // active brushing takes precedence
+    if (args.brushing) {
+        args.processed.min_x = args.brushed_min_x ? Math.max(args.brushed_min_x, min_x) : min_x;
+        args.processed.max_x = args.brushed_max_x ? Math.min(args.brushed_max_x, max_x) : max_x;
+    } else {
+        args.processed.min_x = min_x;
+        args.processed.max_x = max_x;
+    }
 
-    mg_select_xax_format(args);
 
     if (!args.time_series) {
         if (args.processed.min_x < 0) {
-            args.processed.min_x = args.processed.min_x  - (args.processed.max_x * (args.inflator - 1));
+            args.processed.min_x = args.processed.min_x - (args.processed.max_x * (args.inflator - 1));
             args.x_axis_negative = true;
         }
-    }
-
-    if (args.chart_type === 'bar') {
-        args.additional_buffer = args.buffer * 5;
-    } else {
-        args.additional_buffer = 0;
     }
 }
 
 function mg_select_xax_format(args) {
-    if (!args.xax_format && args.chart_type === 'line') args.xax_format       = mg_default_xax_format(args);
-    if (!args.xax_format && args.chart_type === 'point') args.xax_format      = mg_default_xax_format(args);
-    if (!args.xax_format && args.chart_type === 'histogram') args.xax_format  = mg_default_xax_format(args);
-    if (!args.xax_format && args.chart_type === 'bar') args.xax_format        = mg_default_bar_xax_format(args);
+    switch (args.chart_type) {
+        case 'bar':
+            args.xax_format  = mg_default_bar_xax_format(args);
+            break;
+        case 'line':
+        case 'point':
+        case 'histogram':
+            args.xax_format = mg_default_xax_format(args);
+            break;
+    }
 }

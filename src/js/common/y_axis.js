@@ -59,90 +59,99 @@ function y_axis(args) {
     var _set = false,
         gtZeroFilter = function(d) { return d[args.y_accessor] > 0; },
         mapToY = function(d) { return d[args.y_accessor]; };
-    for (var i = 0; i < args.data.length; i++) {
-        var a = args.data[i];
+
+
+    if (args.brushing && (args.brushed_min_y || args.brushed_max_y)) {
+        min_y = args.brushed_min_y;
+        max_y = args.brushed_max_y;
+    } else {
+        for (var i = 0; i < args.data.length; i++) {
+            var a = args.data[i];
+
+            if (args.y_scale_type === 'log') {
+                // filter positive values
+                a = a.filter(gtZeroFilter);
+            }
+
+            if (a.length > 0) { // get min/max in one pass
+                var extent = d3.extent(a, mapToY);
+
+                if (!_set) {
+                    // min_y and max_y haven't been set
+                    min_y = extent[0];
+                    max_y = extent[1];
+                    _set = true;
+                } else {
+                    min_y = Math.min(extent[0], min_y);
+                    max_y = Math.max(extent[1], max_y);
+                }
+            }
+        }
+
+        // the default case is for the y-axis to start at 0, unless we explicitly want it
+        // to start at an arbitrary number or from the data's minimum value
+        if (min_y >= 0 && !args.min_y && !args.min_y_from_data) {
+            min_y = 0;
+        }
+
+        if (args.chart_type === 'bar') {
+            min_y = 0;
+            max_y = d3.max(args.data[0], function(d) {
+                var trio = [];
+                trio.push(d[args.y_accessor]);
+
+                if (args.baseline_accessor !== null) {
+                    trio.push(d[args.baseline_accessor]);
+                }
+
+                if (args.predictor_accessor !== null) {
+                    trio.push(d[args.predictor_accessor]);
+                }
+
+                return Math.max.apply(null, trio);
+            });
+        }
+        //if a min_y or max_y have been set, use those instead
+        min_y = args.min_y !== null ? args.min_y : min_y;
+        max_y = args.max_y !== null ? args.max_y : max_y * args.inflator;
+        if (args.y_scale_type !== 'log') {
+            //we are currently saying that if the min val > 0, set 0 as min y
+            if (min_y >= 0) {
+                args.y_axis_negative = false;
+            } else {
+                min_y = min_y  - (max_y * (args.inflator - 1));
+                args.y_axis_negative = true;
+            }
+        }
+
+        if (!args.min_y && args.min_y_from_data) {
+            min_y = min_y / args.inflator;
+        }
 
         if (args.y_scale_type === 'log') {
-            // filter positive values
-            a = a.filter(gtZeroFilter);
-        }
-
-        if (a.length > 0) { // get min/max in one pass
-            var extent = d3.extent(a, mapToY);
-
-            if (!_set) {
-                // min_y and max_y haven't been set
-                min_y = extent[0];
-                max_y = extent[1];
-                _set = true;
+            if (args.chart_type === 'histogram') {
+                // log histogram plots should start just below 1
+                // so that bins with single counts are visible
+                min_y = 0.2;
             } else {
-                min_y = Math.min(extent[0], min_y);
-                max_y = Math.max(extent[1], max_y);
+                if (min_y <= 0) {
+                    min_y = 1;
+                }
             }
-        }
-    }
-
-    // the default case is for the y-axis to start at 0, unless we explicitly want it
-    // to start at an arbitrary number or from the data's minimum value
-    if (min_y >= 0 && !args.min_y && !args.min_y_from_data) {
-        min_y = 0;
-    }
-
-    if (args.chart_type === 'bar') {
-        min_y = 0;
-        max_y = d3.max(args.data[0], function(d) {
-            var trio = [];
-            trio.push(d[args.y_accessor]);
-
-            if (args.baseline_accessor !== null) {
-                trio.push(d[args.baseline_accessor]);
-            }
-
-            if (args.predictor_accessor !== null) {
-                trio.push(d[args.predictor_accessor]);
-            }
-
-            return Math.max.apply(null, trio);
-        });
-    }
-    //if a min_y or max_y have been set, use those instead
-    min_y = args.min_y !== null ? args.min_y : min_y;
-    max_y = args.max_y !== null ? args.max_y : max_y * args.inflator;
-    if (args.y_scale_type !== 'log') {
-        //we are currently saying that if the min val > 0, set 0 as min y
-        if (min_y >= 0) {
-            args.y_axis_negative = false;
+            args.scales.Y = d3.scale.log()
+                .domain([min_y, max_y])
+                .range([args.height - args.bottom - args.buffer, args.top])
+                .clamp(true);
         } else {
-            min_y = min_y  - (max_y * (args.inflator - 1));
-            args.y_axis_negative = true;
+            args.scales.Y = d3.scale.linear()
+                .domain([min_y, max_y])
+                .range([args.height - args.bottom - args.buffer, args.top]);
         }
+        args.processed.min_y = min_y;
+        args.processed.max_y = max_y;
     }
 
-    if (!args.min_y && args.min_y_from_data) {
-        min_y = min_y / args.inflator;
-    }
 
-    if (args.y_scale_type === 'log') {
-        if (args.chart_type === 'histogram') {
-            // log histogram plots should start just below 1
-            // so that bins with single counts are visible
-            min_y = 0.2;
-        } else {
-            if (min_y <= 0) {
-                min_y = 1;
-            }
-        }
-        args.scales.Y = d3.scale.log()
-            .domain([min_y, max_y])
-            .range([args.height - args.bottom - args.buffer, args.top])
-            .clamp(true);
-    } else {
-        args.scales.Y = d3.scale.linear()
-            .domain([min_y, max_y])
-            .range([args.height - args.bottom - args.buffer, args.top]);
-    }
-    args.processed.min_y = min_y;
-    args.processed.max_y = max_y;
     //used for ticks and such, and designed to be paired with log or linear
     args.scales.Y_axis = d3.scale.linear()
         .domain([args.processed.min_y, args.processed.max_y])
