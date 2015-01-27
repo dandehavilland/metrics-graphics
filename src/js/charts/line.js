@@ -121,7 +121,6 @@ charts.line = function(args) {
                 var rolloverCircles = svg.selectAll('circle.mg-line-rollover-circle');
                 rolloverCircles.remove();
 
-                var chartContext = this;
                 chartContext.preventRollover = true;
 
                 $(svg.node()).find('.mg-y-axis').after($existing_line.detach());
@@ -669,13 +668,17 @@ charts.line = function(args) {
 
     this.mouseDown = function(args) {
         return function(d, i) {
-            console.log('mouseDown', arguments);
+            if (args.mousedown) {
+                args.mousedown(d, i);
+            }
         };
     };
 
     this.mouseUp = function(args) {
         return function(d, i) {
-            console.log('mouseUp', arguments);
+            if (args.mouseup) {
+                args.mouseup(d, i);
+            }
         };
     };
 
@@ -799,7 +802,7 @@ charts.line = function(args) {
 
                 // is there at least one data point in the chosen selection? if not, increase the range until there is.
                 var iterations = 0;
-                while (boundedData.length == 0 && iterations <= flatData.length) {
+                while (boundedData.length === 0 && iterations <= flatData.length) {
                     args.min_x = interval.round(xScale.invert(extentX0));
                     args.max_x = Math.max(
                         interval.offset(args.min_x, 1),
