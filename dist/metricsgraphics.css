@@ -370,8 +370,8 @@ circle.mg-points-mono {
     cursor: ew-resize;
 }
 
-.mg-brush-container.mg-brushed {
-    cursor: zoom-out;
+.mg-brushed, .mg-brushed * {
+    cursor: zoom-out !important;
 }
 
 .mg-brush rect.mg-extent {

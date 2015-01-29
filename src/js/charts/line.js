@@ -415,8 +415,7 @@ charts.line = function(args) {
         }
 
         if (args.brushing && (args.brushed_min_x || args.brushed_max_x || args.brushed_min_y || args.brushed_max_y)) {
-            svg.select('.mg-rollover-rect, .mg-voronoi')
-                .classed('mg-brushed', true);
+            svg.classed('mg-brushed', true);
         }
 
         return this;
@@ -710,11 +709,11 @@ charts.line = function(args) {
             .classed('mg-extent', true);
 
         // mousedown, start area selection
-        rollover.on('mousedown', function() {
+        svg.on('mousedown', function() {
             mouseDown = true;
             isDragging = false;
             originX = d3.mouse(this)[0];
-            rollover.classed('mg-brushed', false);
+            svg.classed('mg-brushed', false);
             extentRect.attr({
                 x: d3.mouse(this)[0],
                 opacity: 0,
@@ -723,7 +722,7 @@ charts.line = function(args) {
         });
 
         // mousemove / drag, expand area selection
-        rollover.on('mousemove', function() {
+        svg.on('mousemove', function() {
             if (mouseDown) {
                 isDragging = true;
                 rollover.classed('mg-brushing', true);
@@ -741,10 +740,8 @@ charts.line = function(args) {
         });
 
         // mouseup, finish area selection
-        rollover.on('mouseup', function() {
+        svg.on('mouseup', function() {
             mouseDown = false;
-
-            rollover.classed('mg-brushing', false);
 
             var xScale = args.scales.X,
                 yScale = args.scales.Y,
@@ -818,6 +815,7 @@ charts.line = function(args) {
                     xScale.domain(xBounds);
                     yScale.domain(yBounds);
                 } else {
+                    rollover.classed('mg-brushing', false);
                     args.brushed = false;
 
                     delete args.brushed_max_x;
@@ -831,17 +829,17 @@ charts.line = function(args) {
                 }
             }
 
-            // trigger the brushing callback
-            if (args.brushing_callback) {
-                args.brushing_callback.apply(this, [{
-                    min_x: xBounds[0],
-                    max_x: xBounds[1],
-                    min_y: yBounds[0],
-                    max_y: yBounds[1]
-                }]);
+            if (xBounds[0] < xBounds[1] && yBounds[0] < yBounds[1]) {
+                // trigger the brushing callback
+                if (args.brushing_callback) {
+                    args.brushing_callback.apply(this, [{
+                        min_x: xBounds[0],
+                        max_x: xBounds[1],
+                        min_y: yBounds[0],
+                        max_y: yBounds[1]
+                    }]);
+                }
             }
-
-
 
             // redraw the chart
             MG.data_graphic(args);
