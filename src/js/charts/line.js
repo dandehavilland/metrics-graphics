@@ -694,9 +694,7 @@ charts.line = function(args) {
             svg = d3.select(args.target).select('svg'),
             rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
             brushingGroup,
-            extentRect,
-            zoomLevel = 0,
-            maxZooomLevel = 10;
+            extentRect;
 
         rollover.classed('mg-brush-container', true);
 
@@ -764,6 +762,19 @@ charts.line = function(args) {
             // if we're zooming in: calculate the domain for x and y axes based on the selected rect
             if (isDragging) {
                 isDragging = false;
+
+                if (args.brushed) {
+                    args.brushHistory = args.brushHistory || [];
+                    args.brushHistory.push({
+                        max_x: args.brushed_max_x,
+                        min_x: args.brushed_min_x,
+                        max_y: args.brushed_max_y,
+                        min_y: args.brushed_min_y
+                    });
+                }
+
+                args.brushed = true;
+
                 boundedData = [];
                 // is there at least one data point in the chosen selection? if not, increase the range until there is.
                 var iterations = 0;
@@ -782,8 +793,8 @@ charts.line = function(args) {
                 }
 
                 xBounds = d3.extent(boundedData, mapDtoX);
-                args.brushed_min_x = xBounds[0];
-                args.brushed_max_x = xBounds[1];
+                args.brushed_min_x = +xBounds[0];
+                args.brushed_max_x = +xBounds[1];
                 xScale.domain(xBounds);
 
                 yBounds = d3.extent(boundedData, mapDtoY);
@@ -792,18 +803,32 @@ charts.line = function(args) {
                 args.brushed_min_y = yBounds[0] * 0.9;
                 args.brushed_max_y = yBounds[1] * 1.1;
                 yScale.domain(yBounds);
-
             }
             // if we're using out: use all of the data
             else {
-                delete args.brushed_max_x;
-                delete args.brushed_min_x;
-                delete args.brushed_max_y;
-                delete args.brushed_min_y;
+                var previousBrush = args.brushHistory && args.brushHistory.pop();
+                if (previousBrush) {
+                    args.brushed_max_x = previousBrush.max_x;
+                    args.brushed_min_x = previousBrush.min_x;
+                    args.brushed_max_y = previousBrush.max_y;
+                    args.brushed_min_y = previousBrush.min_y;
 
-                boundedData = flatData;
-                xBounds = d3.extent(boundedData, mapDtoX);
-                yBounds = d3.extent(boundedData, mapDtoY);
+                    xBounds = [args.brushed_min_x, args.brushed_max_x];
+                    yBounds = [args.brushed_min_y, args.brushed_max_y];
+                    xScale.domain(xBounds);
+                    yScale.domain(yBounds);
+                } else {
+                    args.brushed = false;
+
+                    delete args.brushed_max_x;
+                    delete args.brushed_min_x;
+                    delete args.brushed_max_y;
+                    delete args.brushed_min_y;
+
+                    boundedData = flatData;
+                    xBounds = d3.extent(boundedData, mapDtoX);
+                    yBounds = d3.extent(boundedData, mapDtoY);
+                }
             }
 
             // trigger the brushing callback
@@ -821,27 +846,6 @@ charts.line = function(args) {
             // redraw the chart
             MG.data_graphic(args);
         });
-
-        // mousewheel zoom
-        // svg.on('mousewheel.zoom', function() {
-        //     var evt = d3.event,
-        //         zoomingIn = d3.event.wheelDeltaY > 0;
-        //
-        //     evt.preventDefault();
-        //
-        //     if (zoomingIn) {
-        //         zoomLevel = Math.min(zoomLevel+1, maxZooomLevel);
-        //     }
-        //
-        //     console.log('mousewheel.zoom');
-        //
-        //     args.min_x = args.scales.X[0];
-        //     args.max_x = args.scales.X[args.scales.X.length-1];
-        //
-        //     MG.data_graphic(args);
-        //
-        //     console.log('mousewheel.zoom');
-        // });
 
         return this;
     };
