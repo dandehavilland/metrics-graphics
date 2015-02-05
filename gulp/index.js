@@ -23,6 +23,7 @@ var
   jsFiles = [
     src + 'MG.js',
     src + 'common/data_graphic.js',
+    src + 'common/register.js',
     src + 'common/bootstrap_tooltip_popover.js',
     src + 'common/chart_title.js',
     src + 'common/y_axis.js',

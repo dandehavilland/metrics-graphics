@@ -6,7 +6,6 @@ function init(args) {
         description: null
     };
 
-    args = arguments[0];
     if (!args) { args = {}; }
     args = merge_with_defaults(args, defaults);
 
@@ -99,7 +98,7 @@ function init(args) {
 
     // remove missing class
     svg.classed('mg-missing', false);
-    
+
     // remove missing text
     svg.selectAll('.mg-missing-text').remove();
     svg.selectAll('.mg-missing-pane').remove();

@@ -6,6 +6,7 @@
 
     "src/js/MG.js",
     "src/js/common/data_graphic.js",
+    "src/js/common/register.js",
     "src/js/common/bootstrap_tooltip_popover.js",
     "src/js/common/chart_title.js",
     "src/js/common/y_axis.js",
