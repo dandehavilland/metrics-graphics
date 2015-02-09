@@ -1,3 +1,5 @@
+import { merge_with_defaults } from '../misc/utility';
+
 /*
 Data Tables
 
@@ -14,7 +16,7 @@ var table = New data_table(data)
 
 */
 
-MG.data_table = function(args) {
+function data_table(args) {
     'use strict';
     this.args = args;
     this.args.standard_col = { width: 150, font_size: 12, font_weight: 'normal' };
@@ -212,3 +214,5 @@ MG.data_table = function(args) {
 
     return this;
 };
+
+MG.register('data-table', data_table);

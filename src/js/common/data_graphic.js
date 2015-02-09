@@ -1,15 +1,20 @@
-MG.globals = {};
-MG.deprecations = {
+import {
+    merge_with_defaults,
+    warn_deprecation
+} from '../misc/utility';
+
+
+// MG.globals = {};
+// TODO: globals
+
+export var deprecations = {
     rollover_callback: { replacement: 'mouseover', version: '2.0' },
     rollout_callback: { replacement: 'mouseout', version: '2.0' },
     show_years: { replacement: 'show_secondary_x_label', version: '2.1' }
 };
-MG.globals.link = false;
-MG.globals.version = "1.1";
 
-MG.charts = {};
 
-MG.data_graphic = function(args) {
+export default function data_graphic(args) {
     'use strict';
     var defaults = {
         missing_is_zero: false,       // if true, missing values will be treated as zeros

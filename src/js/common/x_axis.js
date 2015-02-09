@@ -1,4 +1,9 @@
-function x_rug(args) {
+import {
+    mg_get_svg_child_of,
+    truncate_text
+} from '../misc/utility';
+
+export function x_rug(args) {
     'use strict';
     var buffer_size = args.chart_type === 'point'
         ? args.buffer / 2
@@ -41,7 +46,7 @@ function x_rug(args) {
     }
 }
 
-function x_axis(args) {
+export function x_axis(args) {
     'use strict';
     var svg = mg_get_svg_child_of(args.target);
     var g;
@@ -97,7 +102,7 @@ function x_axis(args) {
     return this;
 }
 
-function x_axis_categorical(args) {
+export function x_axis_categorical(args) {
     var svg = mg_get_svg_child_of(args.target);
 
     var svg_width = args.width,
@@ -146,7 +151,7 @@ function x_axis_categorical(args) {
     return this;
 }
 
-function mg_point_add_color_scale(args) {
+export function mg_point_add_color_scale(args) {
     var min_color, max_color,
         color_domain, color_range;
 
@@ -206,7 +211,7 @@ function mg_point_add_color_scale(args) {
     }
 }
 
-function mg_point_add_size_scale(args) {
+export function mg_point_add_size_scale(args) {
     var min_size, max_size, size_domain, size_range;
     if (args.size_accessor !== null) {
         if (args.size_domain === null) {
@@ -239,7 +244,7 @@ function mg_point_add_size_scale(args) {
     }
 }
 
-function mg_add_x_label(g, args) {
+export function mg_add_x_label(g, args) {
     g.append('text')
         .attr('class', 'label')
         .attr('x', function() {
@@ -255,7 +260,7 @@ function mg_add_x_label(g, args) {
         });
 }
 
-function mg_default_bar_xax_format(args) {
+export function mg_default_bar_xax_format(args) {
     if (args.xax_format) {
         return args.xax_format;
     }
@@ -271,7 +276,7 @@ function mg_default_bar_xax_format(args) {
     };
 }
 
-function mg_default_xax_format(args) {
+export function mg_default_xax_format(args) {
     if (args.xax_format) {
         return args.xax_format;
     }
@@ -323,7 +328,7 @@ function mg_default_xax_format(args) {
     };
 }
 
-function mg_add_x_ticks(g, args) {
+export function mg_add_x_ticks(g, args) {
     var last_i = args.scales.X.ticks(args.xax_count).length - 1;
 
     if (args.chart_type !== 'bar' && !args.x_extended_ticks && !args.y_extended_ticks) {
@@ -361,7 +366,7 @@ function mg_add_x_ticks(g, args) {
                 });
 }
 
-function mg_add_x_tick_labels(g, args) {
+export function mg_add_x_tick_labels(g, args) {
     g.selectAll('.mg-xax-labels')
         .data(args.scales.X.ticks(args.xax_count)).enter()
             .append('text')
@@ -432,7 +437,7 @@ function mg_add_x_tick_labels(g, args) {
     }
 }
 
-function mg_find_min_max_x(args) {
+export function mg_find_min_max_x(args) {
     var last_i,
         extent_x = [],
         min_x,
@@ -505,7 +510,7 @@ function mg_find_min_max_x(args) {
     }
 }
 
-function mg_select_xax_format(args) {
+export function mg_select_xax_format(args) {
     if (!args.xax_format && args.chart_type === 'line') args.xax_format       = mg_default_xax_format(args);
     if (!args.xax_format && args.chart_type === 'point') args.xax_format      = mg_default_xax_format(args);
     if (!args.xax_format && args.chart_type === 'histogram') args.xax_format  = mg_default_xax_format(args);

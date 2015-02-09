@@ -1,4 +1,4 @@
-function add_ls(args) {
+export function add_ls(args) {
     var svg = mg_get_svg_child_of(args.target);
     var data = args.data[0];
     var min_x = args.scales.X.ticks(args.xax_count)[0];
@@ -14,7 +14,7 @@ function add_ls(args) {
         .attr('class', 'mg-least-squares-line');
 }
 
-function add_lowess(args) {
+export function add_lowess(args) {
     var svg = d3.select($(args.target).find('svg').get(0));
     var lowess = args.lowess_line;
 
@@ -28,7 +28,7 @@ function add_lowess(args) {
         .attr('class', 'mg-lowess-line');
 }
 
-function lowess_robust(x, y, alpha, inc) {
+export function lowess_robust(x, y, alpha, inc) {
     // Used http://www.unc.edu/courses/2007spring/biol/145/001/docs/lectures/Oct27.html
     // for the clear explanation of robust lowess.
 
@@ -68,13 +68,13 @@ function lowess_robust(x, y, alpha, inc) {
     });
 }
 
-function lowess(x, y, alpha, inc) {
+export function lowess(x, y, alpha, inc) {
     var r = [];
     for (var i = 0; i < x.length; i += 1) { r.push(1); }
     var _l = _calculate_lowess_fit(x, y, alpha, inc, r);
 }
 
-function least_squares(x_, y_) {
+export function least_squares(x_, y_) {
     var x, y, xi, yi,
         _x  = 0,
         _y  = 0,
@@ -121,7 +121,7 @@ function least_squares(x_, y_) {
     };
 }
 
-function _pow_weight(u, w) {
+export function _pow_weight(u, w) {
     if (u >= 0 && u <= 1) {
         return Math.pow(1 - Math.pow(u,w), w);
     } else {
@@ -129,25 +129,25 @@ function _pow_weight(u, w) {
     }
 }
 
-function _bisquare_weight(u) {
+export function _bisquare_weight(u) {
     return _pow_weight(u, 2);
 }
 
-function _tricube_weight(u) {
+export function _tricube_weight(u) {
     return _pow_weight(u, 3);
 }
 
-function _neighborhood_width(x0, xis) {
+export function _neighborhood_width(x0, xis) {
     return Array.max(xis.map(function(xi) {
         return Math.abs(x0 - xi);
     }));
 }
 
-function _manhattan(x1,x2) {
+export function _manhattan(x1,x2) {
     return Math.abs(x1 - x2);
 }
 
-function _weighted_means(wxy) {
+export function _weighted_means(wxy) {
     var wsum = d3.sum(wxy.map(function(wxyi) { return wxyi.w; }));
 
     return {
@@ -160,7 +160,7 @@ function _weighted_means(wxy) {
     };
 }
 
-function _weighted_beta(wxy, xbar, ybar) {
+export function _weighted_beta(wxy, xbar, ybar) {
     var num = d3.sum(wxy.map(function(wxyi) {
         return Math.pow(wxyi.w, 2) * (wxyi.x - xbar) * (wxyi.y - ybar);
     }));
@@ -172,7 +172,7 @@ function _weighted_beta(wxy, xbar, ybar) {
     return num / denom;
 }
 
-function _weighted_least_squares(wxy) {
+export function _weighted_least_squares(wxy) {
     var ybar, xbar, beta_i, x0;
 
     var _wm = _weighted_means(wxy);
@@ -191,7 +191,7 @@ function _weighted_least_squares(wxy) {
     };
 }
 
-function _calculate_lowess_fit(x, y, alpha, inc, residuals) {
+export function _calculate_lowess_fit(x, y, alpha, inc, residuals) {
     // alpha - smoothing factor. 0 < alpha < 1/
     //
     //

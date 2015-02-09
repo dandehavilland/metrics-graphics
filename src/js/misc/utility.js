@@ -1,8 +1,8 @@
 //a set of helper functions, some that we've written, others that we've borrowed
 
-MG.convert = {};
+var convert = {};
 
-MG.convert.date = function(data, accessor, time_format) {
+convert.date = function(data, accessor, time_format) {
     time_format = (typeof time_format === "undefined") ? '%Y-%m-%d' : time_format;
     data = data.map(function(d) {
         var fff = d3.time.format(time_format);
@@ -13,7 +13,7 @@ MG.convert.date = function(data, accessor, time_format) {
     return data;
 };
 
-MG.convert.number = function(data, accessor) {
+convert.number = function(data, accessor) {
     data = data.map(function(d) {
         d[accessor] = Number(d[accessor]);
         return d;
@@ -22,33 +22,35 @@ MG.convert.number = function(data, accessor) {
     return data;
 };
 
-function mg_get_svg_child_of(selector_or_node) {
+export { convert };
+
+export function mg_get_svg_child_of(selector_or_node) {
     return d3.select(selector_or_node).select('svg');
 }
 
-function mg_strip_punctuation(s) {
+export function mg_strip_punctuation(s) {
     var punctuationless = s.replace(/[^a-zA-Z0-9 _]+/g, '');
     var finalString = punctuationless.replace(/ +?/g, "");
     return finalString;
 }
 
-function get_pixel_dimension(target, dimension) {
+export function get_pixel_dimension(target, dimension) {
     return Number(d3.select(target).style(dimension).replace(/px/g, ''));
 }
 
-function get_width(target) {
+export function get_width(target) {
     return get_pixel_dimension(target, 'width');
 }
 
-function get_height(target) {
+export function get_height(target) {
     return get_pixel_dimension(target, 'height');
 }
 
-function isNumeric(n) {
+export function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-var each = function(obj, iterator, context) {
+export function each(obj, iterator, context) {
     // yanked out of underscore
     if (obj === null) return obj;
     if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
@@ -66,7 +68,7 @@ var each = function(obj, iterator, context) {
     return obj;
 };
 
-function merge_with_defaults(obj) {
+export function merge_with_defaults(obj) {
     // taken from underscore
     each(Array.prototype.slice.call(arguments, 1), function(source) {
       if (source) {
@@ -79,7 +81,7 @@ function merge_with_defaults(obj) {
     return obj;
 }
 
-function number_of_values(data, accessor, value) {
+export function number_of_values(data, accessor, value) {
     var values = data.filter(function(d) {
         return d[accessor] === value;
     });
@@ -87,7 +89,7 @@ function number_of_values(data, accessor, value) {
     return values.length;
 }
 
-function has_values_below(data, accessor, value) {
+export function has_values_below(data, accessor, value) {
     var values = data.filter(function(d) {
         return d[accessor] <= value;
     });
@@ -95,13 +97,13 @@ function has_values_below(data, accessor, value) {
     return values.length > 0;
 }
 
-function has_too_many_zeros(data, accessor, zero_count) {
+export function has_too_many_zeros(data, accessor, zero_count) {
     return number_of_values(data, accessor, 0) >= zero_count;
 }
 
 //deep copy
 //http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
-MG.clone = function(obj) {
+export function clone(obj) {
     var copy;
 
     // Handle the 3 simple types, and null or undefined
@@ -137,7 +139,7 @@ MG.clone = function(obj) {
 
 //give us the difference of two int arrays
 //http://radu.cotescu.com/javascript-diff-function/
-function arrDiff(a,b) {
+export function arrDiff(a,b) {
     var seen = [],
         diff = [],
         i;
@@ -156,7 +158,7 @@ function arrDiff(a,b) {
     @author Dan de Havilland (github.com/dandehavilland)
     @date 2014-12
 */
-function warnDeprecation(message, untilVersion) {
+export function warnDeprecation(message, untilVersion) {
   console.warn('Deprecation: ' + message + (untilVersion ? '. This feature will be removed in ' + untilVersion + '.' : ' the near future.'));
   console.trace();
 }
@@ -168,7 +170,7 @@ function warnDeprecation(message, untilVersion) {
     @author Dan de Havilland (github.com/dandehavilland)
     @date 2014-12-02
 */
-function truncate_text(textObj, textString, width) {
+export function truncate_text(textObj, textString, width) {
   var bbox,
     position = 0;
 
@@ -195,7 +197,7 @@ function truncate_text(textObj, textString, width) {
   @author Dan de Havilland
   @date 2015-01-14
 */
-function wrapText(text, width, token, tspanAttrs) {
+export function wrapText(text, width, token, tspanAttrs) {
   text.each(function() {
     var text = d3.select(this),
         words = text.text().split(token || /\s+/).reverse(),

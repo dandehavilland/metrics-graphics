@@ -11,11 +11,14 @@ var
   jshint = require('gulp-jshint'),
   testem = require('gulp-testem'),
   connect = require('gulp-connect'),
-  es6ModuleTranspiler = require("gulp-es6-module-transpiler");
+  sourcemaps = require('gulp-sourcemaps'),
+  transpile = require('gulp-es6-module-transpiler'),
+  amdformatter = require('es6-module-transpiler-amd-formatter');
 
 // paths
 var
   src = './src/js/',
+  deps = ['./node_modules/almond/almond.js'],
 //scss = './scss/',
 //scssFiles = [],
 //scssDependencies = [],
@@ -26,25 +29,25 @@ var
     src + 'common/register.js',
     src + 'common/bootstrap_tooltip_popover.js',
     src + 'common/chart_title.js',
-    src + 'common/y_axis.js',
-    src + 'common/x_axis.js',
-    src + 'common/init.js',
-    src + 'common/markers.js',
-    src + 'common/window_listeners.js',
-    src + 'layout/bootstrap_dropdown.js',
-    src + 'layout/button.js',
-    src + 'charts/line.js',
-    src + 'charts/histogram.js',
-    src + 'charts/point.js',
-    src + 'charts/bar.js',
-    src + 'charts/table.js',
-    src + 'charts/missing.js',
-    src + 'misc/process.js',
-    src + 'misc/smoothers.js',
-    src + 'misc/formatters.js',
-    src + 'misc/transitions.js',
-    src + 'misc/utility.js',
-    src + 'misc/error.js'
+    // src + 'common/y_axis.js',
+    // src + 'common/x_axis.js',
+    // src + 'common/init.js',
+    // src + 'common/markers.js',
+    // src + 'common/window_listeners.js',
+    // src + 'layout/bootstrap_dropdown.js',
+    // src + 'layout/button.js',
+    // src + 'charts/line.js',
+    // src + 'charts/histogram.js',
+    // src + 'charts/point.js',
+    // src + 'charts/bar.js',
+    // src + 'charts/table.js',
+    // src + 'charts/missing.js',
+    // src + 'misc/process.js',
+    // src + 'misc/smoothers.js',
+    // src + 'misc/formatters.js',
+    // src + 'misc/transitions.js',
+    // src + 'misc/utility.js',
+    // src + 'misc/error.js'
   ];
 
 
@@ -65,42 +68,18 @@ gulp.task('clean', function () {
 
 // create 'metricsgraphics.js' and 'metricsgraphics.min.js' from source js
 gulp.task('build:js', ['clean'], function () {
-  return gulp.src(jsFiles)
-    .pipe(concat({path: 'metricsgraphics.js'}))
-    .pipe(umd(
-        {
-          dependencies:function() {
-            return [{
-              name: 'd3',
-              amd: 'd3',
-              cjs: 'd3',
-              global: 'd3',
-              param: 'd3'
-            },
-            {
-              name: 'jquery',
-              amd: 'jquery',
-              cjs: 'jquery',
-              global: 'jQuery',
-              param: '$'
-            }];
-          },
-          exports: function() {
-            return "MG";
-          },
-          namespace: function() {
-            return "MG";
-          }
-        }
-    ))
-    .pipe(es6ModuleTranspiler({
-      type: 'plain',
-      sourceMaps: false
-    }))
-    .pipe(gulp.dest(dist))
-    .pipe(rename('metricsgraphics.min.js'))
-    .pipe(uglify())
-    .pipe(gulp.dest(dist));
+    return gulp.src(deps.concat(jsFiles))
+        .pipe(sourcemaps.init())
+        .pipe(transpile({
+            basePath: 'src/js',
+            formatter: amdformatter
+        }))
+        .pipe(concat({path: 'metricsgraphics.js'}))
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest(dist))
+        .pipe(rename('metricsgraphics.min.js'))
+        // .pipe(uglify())
+        // .pipe(gulp.dest(dist));
 });
 
 // Check source js files with jshint

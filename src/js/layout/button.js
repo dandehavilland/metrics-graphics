@@ -1,4 +1,4 @@
-MG.button_layout = function(target) {
+export default function button_layout(target) {
     'use strict';
     this.target = target;
     this.feature_set = {};

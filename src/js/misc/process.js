@@ -1,4 +1,6 @@
-function raw_data_transformation(args) {
+import { least_squares } from './smoothers';
+
+export function raw_data_transformation(args) {
     'use strict';
 
     // We need to account for a few data format cases:
@@ -53,7 +55,7 @@ function raw_data_transformation(args) {
     return this;
 }
 
-function process_line(args) {
+export function process_line(args) {
     'use strict';
     //do we have a time-series?
     var is_time_series = args.data[0][0][args.x_accessor] instanceof Date
@@ -127,7 +129,7 @@ function process_line(args) {
     return this;
 }
 
-function process_histogram(args) {
+export function process_histogram(args) {
     'use strict';
     // if args.binned=False, then we need to bin the data appropriately.
     // if args.binned=True, then we need to make sure to compute the relevant computed data.
@@ -198,7 +200,7 @@ function process_histogram(args) {
     return this;
 }
 
-function process_categorical_variables(args) {
+export function process_categorical_variables(args) {
     // For use with bar charts, etc.
     'use strict';
     var extracted_data, processed_data={}, pd=[];
@@ -248,7 +250,7 @@ function process_categorical_variables(args) {
     return this;
 }
 
-function process_point(args) {
+export function process_point(args) {
     'use strict';
     var data = args.data[0];
     var x = data.map(function(d) { return d[args.x_accessor]; });

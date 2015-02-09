@@ -1,4 +1,7 @@
-function chart_title(args) {
+import popover from './bootstrap_tooltip_popover';
+import error from '../misc/error';
+
+export default function chart_title(args) {
     'use strict';
 
     var container = d3.select(args.target);

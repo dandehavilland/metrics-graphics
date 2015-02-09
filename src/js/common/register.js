@@ -1,3 +1,5 @@
+import MG from '../mg';
+
 MG.register = function(chartType, descriptor, defaults) {
     MG.charts[chartType] = {
         descriptor: descriptor,

@@ -1,5 +1,5 @@
 //call this to add a warning icon to a graph and log an error to the console
-function error(args) {
+export default function error(args) {
     console.log('ERROR : ', args.target, ' : ', args.error);
 
     d3.select(args.target).select('.mg-chart-title')

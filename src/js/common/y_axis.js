@@ -1,7 +1,9 @@
-function y_rug(args) {
+import { mg_get_svg_child_of } from '../misc/utility';
+
+export function y_rug(args) {
     'use strict';
     var svg = mg_get_svg_child_of(args.target);
-    
+
     var buffer_size = args.chart_type === 'point'
         ? args.buffer / 2
         : args.buffer * 2 / 3;
@@ -41,7 +43,7 @@ function y_rug(args) {
     }
 }
 
-function y_axis(args) {
+export function y_axis(args) {
     if (!args.processed) {
         args.processed = {};
     }
@@ -287,7 +289,7 @@ function y_axis(args) {
     return this;
 }
 
-function y_axis_categorical(args) {
+export function y_axis_categorical(args) {
     // first, come up with y_axis
     args.scales.Y = d3.scale.ordinal()
         .domain(args.categorical_variables)

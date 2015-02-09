@@ -2,7 +2,8 @@
   "globals": {
     "$": false,
     "jQuery": false,
-    "d3": false
+    "d3": false,
+    "MG": false
   },
   "laxbreak": true,
   "validthis": true,

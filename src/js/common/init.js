@@ -1,4 +1,12 @@
-function init(args) {
+import {
+    merge_with_defaults,
+    mg_strip_punctuation
+} from '../misc/utility';
+
+import chart_title from './chart_title';
+
+
+export default function init(args) {
     'use strict';
     var defaults = {
         target: null,

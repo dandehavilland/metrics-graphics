@@ -1,4 +1,4 @@
-function markers(args) {
+export function markers(args) {
     'use strict';
     var svg = mg_get_svg_child_of(args.target);
     var gm;

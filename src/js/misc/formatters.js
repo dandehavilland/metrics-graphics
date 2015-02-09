@@ -1,4 +1,4 @@
-function rolloverNumberFormatter(args) {
+export function rolloverNumberFormatter(args) {
     var num;
     if (args.format === 'count') {
         num = function(d_) {
