@@ -4408,6 +4408,9 @@ MG.data_table = function(args) {
 function raw_data_transformation(args) {
     'use strict';
 
+    // dupe our data so we can modify it without adverse effect
+    args.data = MG.clone(args.data);
+
     // We need to account for a few data format cases:
     // #1 [{key:__, value:__}, ...]                              // unnested obj-arrays
     // #2 [[{key:__, value:__}, ...], [{key:__, value:__}, ...]] // nested obj-arrays
