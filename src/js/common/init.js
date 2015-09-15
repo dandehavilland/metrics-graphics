@@ -76,8 +76,10 @@ function init(args) {
     //add clip path element to svg
     svg.selectAll('.mg-clip-path').remove();
 
-    svg.append('defs')
-        .attr('class', 'mg-clip-path')
+    var clip_paths = svg.append('defs')
+        .attr('class', 'mg-clip-path');
+
+    clip_paths
         .append('clipPath')
             .attr('id', 'mg-plot-window-' + mg_target_ref(args.target))
         .append('svg:rect')
@@ -85,6 +87,25 @@ function init(args) {
             .attr('y', args.top)
             .attr('width', args.width - args.left - args.right - args.buffer)
             .attr('height', args.height - args.top - args.bottom - args.buffer + 1);
+
+    clip_paths
+        .append('clipPath')
+            .attr('id', 'mg-x-rug-window-' + mg_target_ref(args.target))
+        .append('svg:rect')
+            .attr('x', args.left)
+            .attr('y', args.height - args.top)
+            .attr('width', args.width - args.left - args.right - args.buffer)
+            .attr('height', args.buffer);
+
+    clip_paths
+        .append('clipPath')
+            .attr('id', 'mg-y-rug-window-' + mg_target_ref(args.target))
+        .append('svg:rect')
+            .attr('x', args.left)
+            .attr('y', args.top)
+            .attr('width', args.buffer)
+            .attr('height', args.height - args.top - args.bottom - args.buffer);
+
 
     //has the width or height changed?
     if (svg_width !== Number(svg.attr('width'))) {

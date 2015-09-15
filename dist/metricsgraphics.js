@@ -892,7 +892,16 @@ function y_rug(args) {
         }
     }
 
-    var rug = svg.selectAll('line.mg-y-rug').data(all_data);
+    var rug_conatiner = svg.selectAll('g.mg-y-rugs')
+        .data([1])
+        .enter()
+            .append('g')
+            .attr('clip-path', 'url(#mg-y-rug-window-'+ mg_target_ref(args.target)+')')
+            .classed('mg-y-rugs', true);
+
+    rug_conatiner.selectAll('.mg-y-rug').remove();
+
+    var rug = rug_conatiner.selectAll('line.mg-y-rug').data(all_data);
 
     //set the attributes that do not change after initialization, per
     //D3's general update pattern
@@ -1248,7 +1257,16 @@ function x_rug(args) {
     //     }
     // }
 
-    var rug = svg.selectAll('line.mg-x-rug').data(all_data);
+    var rug_conatiner = svg.selectAll('g.mg-x-rugs')
+        .data([1])
+        .enter()
+            .append('g')
+            .attr('clip-path', 'url(#mg-x-rug-window-'+ mg_target_ref(args.target)+')')
+            .classed('mg-x-rugs', true);
+
+    rug_conatiner.selectAll('.mg-x-rug').remove();
+
+    var rug = rug_conatiner.selectAll('line.mg-x-rug').data(all_data);
 
     //set the attributes that do not change after initialization, per
     //D3's general update pattern
@@ -1904,8 +1922,10 @@ function init(args) {
     //add clip path element to svg
     svg.selectAll('.mg-clip-path').remove();
 
-    svg.append('defs')
-        .attr('class', 'mg-clip-path')
+    var clip_paths = svg.append('defs')
+        .attr('class', 'mg-clip-path');
+
+    clip_paths
         .append('clipPath')
             .attr('id', 'mg-plot-window-' + mg_target_ref(args.target))
         .append('svg:rect')
@@ -1913,6 +1933,25 @@ function init(args) {
             .attr('y', args.top)
             .attr('width', args.width - args.left - args.right - args.buffer)
             .attr('height', args.height - args.top - args.bottom - args.buffer + 1);
+
+    clip_paths
+        .append('clipPath')
+            .attr('id', 'mg-x-rug-window-' + mg_target_ref(args.target))
+        .append('svg:rect')
+            .attr('x', args.left)
+            .attr('y', args.height - args.top)
+            .attr('width', args.width - args.left - args.right - args.buffer)
+            .attr('height', args.buffer);
+
+    clip_paths
+        .append('clipPath')
+            .attr('id', 'mg-y-rug-window-' + mg_target_ref(args.target))
+        .append('svg:rect')
+            .attr('x', args.left)
+            .attr('y', args.top)
+            .attr('width', args.buffer)
+            .attr('height', args.height - args.top - args.bottom - args.buffer);
+
 
     //has the width or height changed?
     if (svg_width !== Number(svg.attr('width'))) {

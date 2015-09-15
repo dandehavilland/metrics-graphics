@@ -12,7 +12,16 @@ function x_rug(args) {
     //     }
     // }
 
-    var rug = svg.selectAll('line.mg-x-rug').data(all_data);
+    var rug_conatiner = svg.selectAll('g.mg-x-rugs')
+        .data([1])
+        .enter()
+            .append('g')
+            .attr('clip-path', 'url(#mg-x-rug-window-'+ mg_target_ref(args.target)+')')
+            .classed('mg-x-rugs', true);
+
+    rug_conatiner.selectAll('.mg-x-rug').remove();
+
+    var rug = rug_conatiner.selectAll('line.mg-x-rug').data(all_data);
 
     //set the attributes that do not change after initialization, per
     //D3's general update pattern
