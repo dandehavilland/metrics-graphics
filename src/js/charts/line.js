@@ -754,6 +754,9 @@
   function lineChart(args) {
 
     this.init = function(args) {
+      MG.add_hook('x_axis.process_min_max', this.processXAxis);
+      MG.add_hook('y_axis.process_min_max', this.processYAxis);
+
       this.args = args;
 
       if (!args.data || args.data.length === 0) {
@@ -770,6 +773,7 @@
       MG.call_hook('line.before_destroy', this);
 
       init(args);
+
 
       // TODO incorporate markers into calculation of x scales
       new MG.scale_factory(args)
@@ -810,12 +814,11 @@
       this.mainPlot();
       this.rollover();
       this.windowListeners();
+
       if (args.brushing) {
         this.getBrushInterval(args);
         this.isWithinBounds(args);
         this.brushing();
-        this.processXAxis(args, args.min_x, args.max_x);
-        this.processYAxis(args);
         this.afterRollover(args);
       }
 
